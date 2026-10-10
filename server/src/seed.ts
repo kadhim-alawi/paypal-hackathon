@@ -16,7 +16,7 @@ import {
 import { postLedger } from "./domain/ledger.js";
 import type { Assessment, DocumentExtraction, FundRubric, RiskFlag } from "./domain/types.js";
 import { newId, newPublicRef, newSecretToken, sha256Hex } from "./lib/ids.js";
-import { hashPassword } from "./lib/passwords.js";
+import { hashPassword, verifyPassword } from "./lib/passwords.js";
 import type { Services } from "./services.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -144,29 +144,42 @@ export async function seedIfEmpty(s: Services): Promise<boolean> {
   return true;
 }
 
+/**
+ * Creates the two staff accounts on first boot and keeps their passwords in step
+ * with ADMIN_PASSWORD and REVIEWER_PASSWORD, so changing them on a running
+ * deployment takes effect at the next boot.
+ */
+export async function ensureStaffAccounts(s: Services): Promise<{ adminId: string; reviewerId: string; changed: number }> {
+  const accounts = [
+    { ...s.config.admin, name: "Avery Morgan", role: "admin" as const },
+    { ...s.config.reviewer, name: "Sam Rivera", role: "reviewer" as const },
+  ];
+  const ids: string[] = [];
+  let changed = 0;
+  for (const a of accounts) {
+    const [u] = await s.db.select().from(users).where(eq(users.email, a.email)).limit(1);
+    if (!u) {
+      const id = newId("usr");
+      await s.db.insert(users).values({ id, email: a.email, name: a.name, role: a.role, passwordHash: await hashPassword(a.password) });
+      ids.push(id);
+      changed++;
+      continue;
+    }
+    ids.push(u.id);
+    if (!(await verifyPassword(a.password, u.passwordHash))) {
+      await s.db.update(users).set({ passwordHash: await hashPassword(a.password) }).where(eq(users.id, u.id));
+      changed++;
+    }
+  }
+  return { adminId: ids[0]!, reviewerId: ids[1]!, changed };
+}
+
 export async function seedDemo(s: Services): Promise<void> {
   const now = Date.now();
   const rand = rng(20261112);
 
   // ---------------------------------------------------------------- users
-  const adminId = newId("usr");
-  const reviewerId = newId("usr");
-  await s.db.insert(users).values([
-    {
-      id: adminId,
-      email: s.config.admin.email,
-      name: "Avery Morgan",
-      role: "admin",
-      passwordHash: await hashPassword(s.config.admin.password),
-    },
-    {
-      id: reviewerId,
-      email: s.config.reviewer.email,
-      name: "Sam Rivera",
-      role: "reviewer",
-      passwordHash: await hashPassword(s.config.reviewer.password),
-    },
-  ]);
+  const { adminId } = await ensureStaffAccounts(s);
 
   // ---------------------------------------------------------------- funds
   const eastsideId = newId("fnd");

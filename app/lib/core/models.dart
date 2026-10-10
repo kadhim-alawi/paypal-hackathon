@@ -22,6 +22,7 @@ class AppInfo {
   String get mcpUrl => _str(raw['mcpUrl']) ?? '';
   String get publicUrl => _str(raw['publicUrl']) ?? '';
   bool get simulated => paypalMode == 'simulated';
+  bool get demoLogins => raw['demoLogins'] == true;
 }
 
 class FundCategory {

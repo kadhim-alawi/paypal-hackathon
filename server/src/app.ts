@@ -26,7 +26,7 @@ import { publicRoutes } from "./routes/public.js";
 import { simulatorRoutes } from "./routes/simulator.js";
 import { staffRoutes } from "./routes/staff.js";
 import { webhookRoutes } from "./routes/webhooks.js";
-import { seedIfEmpty } from "./seed.js";
+import { ensureStaffAccounts, seedIfEmpty } from "./seed.js";
 import type { Services } from "./services.js";
 
 export interface BuildOptions {
@@ -125,9 +125,10 @@ export async function buildApp(opts: BuildOptions): Promise<{ app: FastifyInstan
     }));
   }
 
-  if (config.seedDemo) {
-    const seeded = await seedIfEmpty(services);
-    if (seeded) app.log.info("Seeded demo data");
+  if (config.seedDemo && (await seedIfEmpty(services))) {
+    app.log.info("Seeded demo data");
+  } else if ((await ensureStaffAccounts(services)).changed) {
+    app.log.info("Staff accounts created or updated from the environment");
   }
   if (paypal instanceof SimulatedPayPalGateway) {
     const restored = await restoreSimulatorHistory(services.db, paypal);

@@ -15,6 +15,8 @@ export async function publicRoutes(app: FastifyInstance, s: Services) {
     paypal: { mode: s.paypal.mode, clientId: s.paypal.clientId },
     ai: { mode: s.ai.mode, model: s.ai.model },
     mcpUrl: `${s.config.publicUrl}/mcp`,
+    // One-click staff sign-in on the console login page, only while the demo passwords are in use.
+    demoLogins: s.config.admin.password === "tideover-admin" && s.config.reviewer.password === "tideover-review",
   }));
 
   app.get("/api/funds", async () => {

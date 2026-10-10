@@ -98,25 +98,27 @@ class _LoginPageState extends State<LoginPage> {
                   ]),
                 ),
               ),
-              const SizedBox(height: 16),
-              SectionCard(
-                color: T.sunSoft,
-                title: 'Judging or exploring?',
-                subtitle: 'This demo has two staff accounts so you can try the two-person rule.',
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  OutlinedButton.icon(
-                    onPressed: _busy ? null : () => _demo('reviewer@tideover.app', 'tideover-review'),
-                    icon: const Icon(Icons.person_outline_rounded),
-                    label: const Text('Sign in as Sam (reviewer)'),
-                  ),
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: _busy ? null : () => _demo('admin@tideover.app', 'tideover-admin'),
-                    icon: const Icon(Icons.admin_panel_settings_outlined),
-                    label: const Text('Sign in as Avery (admin)'),
-                  ),
-                ]),
-              ),
+              if (AppScope.of(context).info.demoLogins) ...[
+                const SizedBox(height: 16),
+                SectionCard(
+                  color: T.sunSoft,
+                  title: 'Judging or exploring?',
+                  subtitle: 'This demo has two staff accounts so you can try the two-person rule.',
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    OutlinedButton.icon(
+                      onPressed: _busy ? null : () => _demo('reviewer@tideover.app', 'tideover-review'),
+                      icon: const Icon(Icons.person_outline_rounded),
+                      label: const Text('Sign in as Sam (reviewer)'),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: _busy ? null : () => _demo('admin@tideover.app', 'tideover-admin'),
+                      icon: const Icon(Icons.admin_panel_settings_outlined),
+                      label: const Text('Sign in as Avery (admin)'),
+                    ),
+                  ]),
+                ),
+              ],
             ]),
           ),
         ),
