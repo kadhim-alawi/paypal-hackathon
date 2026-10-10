@@ -214,10 +214,15 @@ export class ClaudeAi implements AiProvider {
   private readonly client: Anthropic;
 
   constructor(
-    opts: { apiKey: string; baseUrl: string },
+    opts: { apiKey: string; baseUrl: string; fetch?: typeof fetch },
     readonly model: string,
   ) {
-    this.client = new Anthropic({ apiKey: opts.apiKey, baseURL: opts.baseUrl, maxRetries: 3 });
+    this.client = new Anthropic({
+      apiKey: opts.apiKey,
+      baseURL: opts.baseUrl,
+      maxRetries: opts.fetch ? 0 : 3,
+      ...(opts.fetch ? { fetch: opts.fetch } : {}),
+    });
   }
 
   /** Server-side refusal fallback ("default" routing) on models that support it. */

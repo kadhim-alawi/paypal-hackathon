@@ -1,0 +1,41 @@
+# One-click deploy: https://render.com/deploy?repo=<your-fork-url>
+services:
+  - type: web
+    name: tideover
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tideover-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      # PayPal sandbox app (developer.paypal.com → Apps & Credentials)
+      - key: PAYPAL_MODE
+        value: sandbox
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      # Claude (console.anthropic.com)
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Staff logins created on first boot
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: REVIEWER_PASSWORD
+        sync: false
+      - key: SEED_DEMO
+        value: "true"
+
+databases:
+  - name: tideover-db
+    plan: basic-256mb
+    databaseName: tideover
+    user: tideover

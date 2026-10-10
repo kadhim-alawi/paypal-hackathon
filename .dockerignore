@@ -1,0 +1,12 @@
+**/node_modules
+**/.dart_tool
+**/build
+**/.git
+server/data
+server/dist
+server/coverage
+e2e
+docs
+*.log
+.env
+.env.*

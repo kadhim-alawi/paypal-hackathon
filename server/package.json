@@ -16,7 +16,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
-    "seed": "tsx src/seed-cli.ts"
+    "seed": "tsx src/seed-cli.ts",
+    "verify:paypal": "tsx src/tools/verify-paypal.ts",
+    "verify:claude": "tsx src/tools/verify-claude.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

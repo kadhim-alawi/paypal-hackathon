@@ -17,6 +17,8 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().int().default(8080),
   HOST: z.string().default("0.0.0.0"),
   PUBLIC_URL: z.string().url().optional(),
+  /** Set automatically by Render. */
+  RENDER_EXTERNAL_URL: z.string().url().optional(),
   DATABASE_URL: z.string().optional(),
   DATA_DIR: z.string().default("./data"),
   JWT_SECRET: z.string().min(16).optional(),
@@ -98,7 +100,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     throw new Error("JWT_SECRET must be set in production");
   }
 
-  const publicUrl = (parsed.PUBLIC_URL ?? `http://localhost:${parsed.PORT}`).replace(/\/$/, "");
+  const publicUrl = (parsed.PUBLIC_URL ?? parsed.RENDER_EXTERNAL_URL ?? `http://localhost:${parsed.PORT}`).replace(/\/$/, "");
 
   return {
     env: parsed.NODE_ENV,
