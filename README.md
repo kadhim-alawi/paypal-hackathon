@@ -27,9 +27,9 @@ Tideover gives a five-volunteer fund the speed of GiveDirectly with the controls
 
 | | |
 |---|---|
-| ![Chat with document](docs/screenshots/apply-chat.jpg) | **Ask for help in any language.** A Claude caseworker asks only what the fund's policy needs, by text or voice. A photo or PDF of a bill or estimate is read on the spot: who issued it, the amount, the due date, and whether it matches the story. No account, no Social Security number. |
-| ![Review and connect PayPal](docs/screenshots/apply-review.jpg) | **Verified payout in two taps.** *Log in with PayPal* proves the applicant controls a verified PayPal account, so the grant goes to a PayPal payer ID rather than a typed email. Venmo (phone) and PayPal email also work. |
-| ![Paid](docs/screenshots/apply-paid.jpg) | **Live status, then cash.** The request page updates in real time: submitted, reviewed, money sent, received. The decision message arrives in the applicant's language. |
+| <img src="docs/screenshots/apply-chat.jpg" width="260" alt="Chat with a document read by the AI caseworker"> | **Ask for help in any language.** A Claude caseworker asks only what the fund's policy needs, by text or voice. A photo or PDF of a bill or estimate is read on the spot: who issued it, the amount, the due date, and whether it matches the story. No account, no Social Security number. |
+| <img src="docs/screenshots/apply-review.jpg" width="260" alt="Review the request with a PayPal-verified payout account"> | **Verified payout in two taps.** *Log in with PayPal* proves the applicant controls a verified PayPal account, so the grant goes to a PayPal payer ID rather than a typed email. Venmo (phone) and PayPal email also work. |
+| <img src="docs/screenshots/apply-paid.jpg" width="260" alt="Request page showing the money was sent"> | **Live status, then cash.** The request page updates in real time: submitted, reviewed, money sent, received. The decision message arrives in the applicant's language. |
 
 ### For organizers and reviewers (staff console)
 
@@ -38,7 +38,7 @@ Tideover gives a five-volunteer fund the speed of GiveDirectly with the controls
 - **AI case file:** a summary, a recommended amount, a confidence score, and a line-by-line check of the fund's own policy with evidence quoted from the conversation and documents.
 - **Automated checks that the AI can't override:** cooldown since the last grant, duplicate open requests, the same document reused across requests, near-identical stories, request velocity, category caps, amount mismatches against documents, and unverified payout accounts.
 - **One-tap decisions** with the money rules built in: approve-and-send, ask for more information, or decline with a reason the applicant receives in their language. Grants above a threshold need **two different reviewers**. Optional auto-approval only fires for small, clean, document-backed requests to verified PayPal accounts.
-- **Money:** every PayPal capture and payout with batch and transaction IDs, fees, and settlement time; payouts poll and reconcile until final, and failed or unclaimed payouts can be retried.
+- **Money:** every PayPal capture and payout with batch and transaction IDs, fees, and settlement time; payouts are tracked until final (unclaimed ones until they're claimed or PayPal returns them), and failed payouts can be retried.
 - **Policy compiler:** paste the fund's rules in plain English and Claude turns them into the structured rubric (categories, caps, required evidence, cooldown) that both the AI and the deterministic checks use.
 - **Treasurer copilot:** ask "how much can we still grant this week?" or "reconcile us with PayPal for the last 7 days". It answers from live data through Tideover tools and the official **PayPal Agent Toolkit**, and refunds always need explicit confirmation.
 - **Append-only audit log** of every AI output, human decision, PayPal call and webhook.
