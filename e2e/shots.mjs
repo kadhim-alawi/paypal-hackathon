@@ -1,6 +1,7 @@
 // Visual smoke test: renders the main pages and saves screenshots.
 // Usage: node e2e/shots.mjs http://localhost:8787 out-dir
-import { chromium } from "/opt/node-tools/node_modules/playwright/index.mjs";
+// npm i -D playwright (or point PLAYWRIGHT_MODULE at an existing install)
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? "playwright");
 
 const base = process.argv[2] ?? "http://localhost:8787";
 const out = process.argv[3] ?? "screenshots";

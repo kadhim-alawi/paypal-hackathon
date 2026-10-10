@@ -1,7 +1,8 @@
 // End-to-end journey through the real UI (Flutter web + API + PayPal simulator).
 // Usage: node e2e/journey.mjs http://localhost:8787 out-dir
-import { chromium } from "/opt/node-tools/node_modules/playwright/index.mjs";
 import { resolve } from "node:path";
+// npm i -D playwright (or point PLAYWRIGHT_MODULE at an existing install)
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? "playwright");
 
 const base = process.argv[2] ?? "http://localhost:8787";
 const out = process.argv[3] ?? "screenshots";

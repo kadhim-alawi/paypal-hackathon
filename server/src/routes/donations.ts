@@ -118,7 +118,7 @@ function checkoutPage(s: Services, d: Awaited<ReturnType<typeof donationStatus>>
   const simulated = s.paypal.mode === "simulated";
   const sdk = simulated
     ? ""
-    : `<script src="https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(s.paypal.clientId ?? "")}&currency=${encodeURIComponent(d.currency)}&intent=capture&components=buttons&enable-funding=venmo,paylater" data-partner-attribution-id="" defer></script>`;
+    : `<script src="https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(s.paypal.clientId ?? "")}&currency=${encodeURIComponent(d.currency)}&intent=capture&components=buttons&enable-funding=venmo,paylater${s.paypal.mode === "sandbox" ? "&buyer-country=US" : ""}" defer></script>`;
   const what = d.need
     ? `Fund an approved ${esc(d.need.categoryLabel.toLowerCase())} grant. The money goes out the moment your payment completes.`
     : `Every dollar goes to neighbors in an emergency. You'll see where it goes on the fund's public page.`;

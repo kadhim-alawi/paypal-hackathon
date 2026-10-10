@@ -207,7 +207,9 @@ function mediaBlock(ctx: DocumentContext): Anthropic.Beta.Messages.BetaContentBl
 
 /**
  * Claude implementation of the AI layer.
- * Defaults to claude-opus-5-5 with adaptive thinking; effort is tuned per task.
+ * Defaults to claude-opus-5-5, where adaptive thinking is always on and effort is
+ * the control, tuned per task. Thinking counts toward max_tokens, so budgets
+ * leave room for it.
  */
 export class ClaudeAi implements AiProvider {
   readonly mode = "claude" as const;
@@ -233,7 +235,7 @@ export class ClaudeAi implements AiProvider {
     return {};
   }
 
-  private async plainText(system: string, user: string, effort: Effort, maxTokens = 2000): Promise<string> {
+  private async plainText(system: string, user: string, effort: Effort, maxTokens = 8000): Promise<string> {
     const res = await this.client.beta.messages.create({
       model: this.model,
       max_tokens: maxTokens,
@@ -243,6 +245,8 @@ export class ClaudeAi implements AiProvider {
       ...this.fallback(),
     });
     if (res.stop_reason === "refusal") throw new AiUnavailableError("The model declined this request");
+    // A cut-off message must never reach an applicant; callers fall back to templates.
+    if (res.stop_reason === "max_tokens") throw new AiUnavailableError("Reply was truncated");
     return textOf(res.content).trim();
   }
 
@@ -260,7 +264,7 @@ export class ClaudeAi implements AiProvider {
       let startedThisIteration = false;
       const stream = this.client.beta.messages.stream({
         model: this.model,
-        max_tokens: 8000,
+        max_tokens: 16000,
         system,
         tools: INTAKE_TOOLS,
         messages,
@@ -351,7 +355,7 @@ export class ClaudeAi implements AiProvider {
       .join("\n");
     const res = await this.client.beta.messages.parse({
       model: this.model,
-      max_tokens: 6000,
+      max_tokens: 16000,
       system: DOCUMENT_SYSTEM_PROMPT,
       messages: [
         {
@@ -464,7 +468,7 @@ export class ClaudeAi implements AiProvider {
       STORY_SYSTEM_PROMPT,
       `Category: ${ctx.categoryLabel}\nAmount: ${(ctx.amountCents / 100).toFixed(2)} ${ctx.currency}\nRegion: ${ctx.region}\nNeed (internal, may contain details you must not repeat): ${ctx.needSummary}\n${ctx.minutesToCash != null ? `Minutes from request to cash: ${Math.round(ctx.minutesToCash)}` : ""}`,
       "low",
-      400,
+      4000,
     );
     return text.replace(/^["']|["']$/g, "");
   }
@@ -480,7 +484,7 @@ export class ClaudeAi implements AiProvider {
       ctx.reason ? `Reason / context: ${ctx.reason}` : null,
       ctx.questions?.length ? `Questions to ask:\n${ctx.questions.map((q) => `- ${q}`).join("\n")}` : null,
     ].filter(Boolean);
-    return this.plainText(DECISION_SYSTEM_PROMPT, lines.join("\n"), "low", 1200);
+    return this.plainText(DECISION_SYSTEM_PROMPT, lines.join("\n"), "low", 4000);
   }
 
   // ----------------------------------------------------------- copilot
