@@ -367,7 +367,7 @@ function describeToolResult(name: string, result: unknown): string {
       if (captured.length === 0) return "No captured donations yet.";
       const byDonor = new Map<string, { cents: number; n: number }>();
       for (const d of captured) {
-        const who = d.anonymous ? "Anonymous" : String(d.donorName ?? d.donorEmail ?? "Unknown");
+        const who = String(d.donorName ?? d.donorEmail ?? "Unknown") + (d.anonymous ? " (anonymous publicly)" : "");
         const cur = byDonor.get(who) ?? { cents: 0, n: 0 };
         byDonor.set(who, { cents: cur.cents + Number(d.amountCents ?? 0), n: cur.n + 1 });
       }

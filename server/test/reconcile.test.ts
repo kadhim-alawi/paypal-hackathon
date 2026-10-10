@@ -42,17 +42,19 @@ describe("PayPal history across restarts and reconciliation", () => {
   it("a restarted simulator remembers captures and payouts, so refunds and reconciliation still work", async () => {
     const { donationId } = await sponsorNeed();
 
+    // Seeded history carries simulated PayPal ids and was restored at boot, so it reconciles too.
     const before = await reconcile(ctx.sim);
-    expect(before.tideoverDonations).toBe(1);
-    expect(before.tideoverPayouts).toBe(1);
+    expect(before.tideoverDonations).toBeGreaterThan(1);
+    expect(before.tideoverPayouts).toBeGreaterThan(1);
     expect(before.missingAtPayPal).toEqual([]);
     expect(before.unknownToTideover).toEqual([]);
-    expect(before.recordsWithoutPayPalIds).toBeGreaterThan(0); // seeded history is reported, not compared
+    expect(before.recordsWithoutPayPalIds).toBe(0);
 
     // Simulate a process restart: a brand-new simulator knows nothing until restored.
     const fresh = new SimulatedPayPalGateway({ publicUrl: "http://tideover.test", payoutDelayMs: 0 });
-    expect((await reconcile(fresh)).missingAtPayPal).toHaveLength(2);
-    expect(await restoreSimulatorHistory(ctx.s.db, fresh)).toBe(2);
+    const lost = (await reconcile(fresh)).missingAtPayPal.length;
+    expect(lost).toBe(before.tideoverDonations + before.tideoverPayouts);
+    expect(await restoreSimulatorHistory(ctx.s.db, fresh)).toBeGreaterThanOrEqual(lost);
     expect((await reconcile(fresh)).missingAtPayPal).toEqual([]);
 
     // A payment PayPal has but Tideover never recorded is surfaced.

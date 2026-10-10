@@ -238,6 +238,13 @@ export async function seedDemo(s: Services): Promise<void> {
     "Priya S.", "Marcus J.", "Elena R.", "Tom W.", "Aisha K.", "Ben C.", "Rosa M.", "Chen L.", "Hannah P.",
     "Diego F.", "Grace O.", "Luis A.", "Nora B.", "Sam T.", "Ivy Q.", "Omar H.", "Kate D.", "Jamal R.",
   ];
+  // In simulator mode the history also exists "at PayPal" (restored into the
+  // simulator on boot), so reconciliation and transaction search have data.
+  // Against the real sandbox it stays imported history without PayPal ids.
+  const simulated = s.paypal.mode === "simulated";
+  const idRand = rng(4242);
+  const simId = (len: number) =>
+    Array.from({ length: len }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789"[Math.floor(idRand() * 34)]).join("");
   const donationAmounts = [2500, 5000, 10000, 2000, 7500, 25000, 5000, 1500, 10000, 3500, 5000, 20000, 4000, 5000, 15000, 2500, 50000, 10000, 5000, 3000, 7500, 10000];
   for (let i = 0; i < donationAmounts.length; i++) {
     const amount = donationAmounts[i]!;
@@ -252,6 +259,9 @@ export async function seedDemo(s: Services): Promise<void> {
       amountCents: amount,
       status: "captured",
       donorName: donorNames[i % donorNames.length]!,
+      donorEmail: simulated ? `${donorNames[i % donorNames.length]!.split(" ")[0]!.toLowerCase()}${i}@donor.example.com` : null,
+      paypalOrderId: simulated ? simId(17) : null,
+      paypalCaptureId: simulated ? simId(17) : null,
       anonymous,
       source: i === 9 || i === 17 ? "agent" : "web",
       agentName: i === 9 || i === 17 ? "Claude" : null,
@@ -319,7 +329,9 @@ export async function seedDemo(s: Services): Promise<void> {
       senderBatchId: `TDO_${payoutId}`,
       method: h.method,
       receiver: h.method === "venmo_phone" ? "5125550100" : "seeded@example.com",
-      paypalBatchId: `SEEDED-${payoutId.slice(-8).toUpperCase()}`,
+      paypalBatchId: simulated ? simId(13) : `SEEDED-${payoutId.slice(-8).toUpperCase()}`,
+      paypalItemId: simulated ? simId(13) : null,
+      paypalTransactionId: simulated ? simId(17) : null,
       paypalTransactionStatus: "SUCCESS",
       feeCents: fee,
       createdAt: new Date(paidAt.getTime() - 2 * MIN),

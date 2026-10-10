@@ -8,6 +8,7 @@
  * PAYPAL_TEST_RECEIVER is the email of a sandbox *personal* account
  * (developer.paypal.com → Sandbox → Accounts).
  */
+import "../lib/env.js";
 import { RestPayPalGateway } from "../paypal/rest.js";
 import { approvalUrl, PayPalApiError } from "../paypal/types.js";
 

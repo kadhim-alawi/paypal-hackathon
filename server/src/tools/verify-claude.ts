@@ -3,6 +3,7 @@
  *
  *   ANTHROPIC_API_KEY=... npm run verify:claude
  */
+import "../lib/env.js";
 import { readFileSync } from "node:fs";
 import { ClaudeAi } from "../ai/claude.js";
 import type { RecordDetailsInput } from "../ai/types.js";
