@@ -112,7 +112,7 @@ All requests use `claude-opus-5-5` with adaptive thinking, per-task `effort`, an
 
 ## Agentic giving (`mcp/server.ts`)
 
-A stateless MCP server at `POST /mcp` (Streamable HTTP) exposes `list_funds`, `find_needs`, `get_impact`, `create_donation` and `get_donation_status`. `create_donation` returns a PayPal checkout link that the human must approve; agents can't move money on their own. Gifts are stored with `source = "agent"` and the agent's name.
+A stateless MCP server at `POST /mcp` (Streamable HTTP) exposes `list_funds`, `find_needs`, `get_impact`, `create_donation` and `get_donation_status`. `create_donation` returns a PayPal checkout link that the human must approve; agents can't move money on their own. Gifts are stored with `source = "agent"` and the agent's name. `agent/donor-agent.ts` (`npm run agent`) is a reference client: Claude connects over MCP, lists the tools, and runs a tool loop that ends with the checkout link for the person to approve.
 
 ## Realtime
 

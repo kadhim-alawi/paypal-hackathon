@@ -8,7 +8,9 @@ Copy these into the Devpost form. Fill in the bracketed links before submitting.
 
 **Links:** live demo [Render URL] · video [YouTube URL] · code [GitHub URL]
 
-**Prizes to opt into:** Best Use of PayPal + AI, Most Impactful, Best Use of Agentic Commerce, Best Demo Delivery, Most Creative, and Render (deployed on Render with a blueprint, Docker and Render Postgres).
+**Prizes:** the official rules let a project win **one Grand Prize or one Honorable Mention (Most Creative, Most Impactful, Best Demo Delivery, Best Use of PayPal + AI, Best Use of Agentic Commerce), plus one Sponsor Prize**. Enter for every grand and honorable-mention prize, and for **Best Use of Render** (sponsor prize): Tideover deploys on Render from a blueprint, as a Docker web service with Render Postgres. It doesn't use the other sponsors' tools (AG Grid, APIMatic, Bryntum, Channel3), so don't select those.
+
+**Built with (Devpost tags):** see the list at the end.
 
 ---
 
@@ -38,9 +40,20 @@ The principle throughout: **AI proposes, people decide, rules enforce.**
 - **TypeScript / Node 22 / Fastify** server with **Drizzle** on **Postgres** (embedded PGlite for development and tests).
 - **PayPal:** Payouts v1 (PayPal, Venmo and verified `PAYPAL_ID` recipients) with `sender_batch_id` and `PayPal-Request-Id` idempotency; Orders v2 with the JS SDK Smart Buttons (PayPal, Venmo, Pay Later, cards); Log in with PayPal (`userinfo`, `paypalattributes`); webhooks with signature verification; refunds; Transaction Search for reconciliation; and the PayPal Agent Toolkit in the copilot.
 - **Claude (`claude-opus-5-5`)** through the Anthropic SDK: a streaming tool-use agent for intake, vision with structured outputs for documents, structured outputs at high effort for assessments and the policy compiler, short generations for multilingual decision messages and anonymized impact stories, and a tool-using copilot. We use prompt caching for the long policy prompts and server-side fallbacks for resilience. Every AI call has a deterministic fallback, so the fund keeps running if the AI is down.
-- **MCP** (Streamable HTTP) server for agent donations.
+- **MCP** (Streamable HTTP) server for agent donations, plus a terminal donor agent (`npm run agent`) that uses Claude as an MCP client to find a need and start a gift.
 - An in-process **PayPal simulator** that speaks the same wire formats and state machines, so the whole product runs offline and the test suite is deterministic. The same domain code runs against the real sandbox.
 - Shipped as one **Docker** image with a **Render** blueprint (web service + Postgres).
+
+## Tools: which AI we used and how
+
+The rules ask every submission to name its AI tools and explain how they're used.
+
+| Tool | How Tideover uses it |
+|---|---|
+| **Claude (`claude-opus-5-5`) through the Anthropic API and the official TypeScript SDK** | (1) **Intake agent:** a streaming tool-use loop (`record_details`, `request_document`, `mark_ready`) that interviews applicants in their own language and fills the case. (2) **Document reader:** vision on photos and PDFs with structured output that extracts issuer, amount, dates and red flags, and checks them against the stated need. (3) **Caseworker assessment:** structured output at high effort that scores the request against the fund's own rubric, with evidence for each criterion and a recommended amount, which code then clamps to caps. (4) **Policy compiler:** turns an organizer's plain-English policy into the structured rubric the system enforces. (5) **Treasurer copilot:** a tool-using agent over Tideover data and the PayPal Agent Toolkit. (6) **Short generations:** decision messages in the applicant's language and anonymized one-line impact stories. (7) **Donor agent:** `npm run agent`, a terminal assistant that gives through Tideover's MCP server. Prompt caching, per-task effort and server-side fallbacks are configured for each call. |
+| **PayPal Agent Toolkit** (`@paypal/agent-toolkit`) | Gives the copilot live PayPal tools alongside Tideover's own (transactions, orders and more). |
+| **Model Context Protocol** (`@modelcontextprotocol/sdk`) | Tideover's MCP server (`/mcp`) lets any AI agent find verified needs and start PayPal donations; the donor agent is its MCP client. |
+| **Deterministic fallbacks** | Every AI call has a rule-based fallback, so the fund keeps working (clearly labelled) if the AI is unavailable, and the test suite runs offline. |
 
 ## Challenges we ran into
 
@@ -53,7 +66,7 @@ The principle throughout: **AI proposes, people decide, rules enforce.**
 
 - The full journey works end to end: a Spanish-speaking applicant with a document and a verified PayPal account, reviewer approval, a PayPal payout, and the applicant seeing "money sent", verified in a real browser with Playwright.
 - A donor funding a specific approved need and watching it pay out instantly.
-- 39 automated tests across the applicant flow, approvals and the two-person rule, risk checks, webhooks, MCP, reconciliation, and contract tests for both the PayPal REST client and the Claude provider.
+- 40 automated tests across the applicant flow, approvals and the two-person rule, risk checks, webhooks, MCP, reconciliation, and contract tests for both the PayPal REST client and the Claude provider.
 - It works for real today: one `render.yaml`, and any community fund can run it.
 
 ## What we learned
@@ -69,6 +82,37 @@ The principle throughout: **AI proposes, people decide, rules enforce.**
 - Vendor payouts (pay the mechanic or landlord directly) and PayPal invoicing for partner organizations.
 - SMS and WhatsApp intake for people without smartphones or data.
 - Multi-fund networks that route an applicant to the right fund automatically.
+
+## Testing instructions for judges
+
+- **Hosted demo:** [Render URL]. Every page shows a banner with the mode (PayPal sandbox or simulator, Claude or offline).
+- **Staff console:** open `/console` and use **Sign in as Sam (reviewer)** or **Sign in as Avery (admin)** (one click; or `reviewer@tideover.app` / `tideover-review`, `admin@tideover.app` / `tideover-admin`).
+- **PayPal sandbox buyer for donations and Log in with PayPal:** [sandbox personal account email] / [password]. These are sandbox test credentials holding fake money.
+- **Sample documents** to upload when applying: [`demo-assets/`](../demo-assets) in the repo.
+- **A 5-minute guided tour** is in the README ("Judge's tour"). To run it locally instead, see "Run it locally" (three commands, no keys needed: it runs fully offline in simulator mode).
+- **Agentic giving:** `cd server && ANTHROPIC_API_KEY=... npm run agent -- --url [Render URL] "Give $25 to an approved need"`, or add `[Render URL]/mcp` to any MCP-capable assistant.
+
+## How Tideover meets the judging criteria
+
+The five criteria are weighted equally; ties are broken in this order.
+
+- **Technological Implementation:** Seven PayPal capabilities used for what they're for: Payouts (PayPal, Venmo, verified payer IDs), Orders v2 with the JS SDK, Log in with PayPal, verified webhooks, refunds, Transaction Search, and the Agent Toolkit. Claude in seven roles (intake agent, document vision, structured assessment, policy compiler, copilot, multilingual messages and stories, MCP donor agent). Idempotent money movement with a per-fund lock and an append-only ledger. 40 automated tests, Playwright end-to-end runs, and live `verify:paypal` / `verify:claude` scripts.
+- **Design:** One coherent product for three audiences (applicant, reviewer/treasurer, donor), mobile-first, multilingual, realtime, with plain-language status at every step and accessible semantics. It runs in production today from one Render blueprint.
+- **Potential Impact:** It's built for a specific, documented gap: 37% of U.S. adults can't cover $400, and the community funds that help them run on spreadsheets and personal Venmo accounts. The demo shows the full path from request to cash in minutes with human approval and fraud checks. It's open source and ready for any mutual aid group or campus fund.
+- **Innovation/Idea:** An AI caseworker that doesn't decide; a compiled, enforceable policy instead of prompt rules; donors (and their AI agents over MCP) funding a specific, verified need that pays out the moment the payment captures.
+- **Presentation:** A sub-3-minute video that follows one real story end to end, from Spanish chat to money arriving in a sandbox PayPal account, plus this write-up, screenshots, and a guided tour in the README.
+
+## Image gallery (upload in this order)
+
+1. `docs/devpost/cover.png` (thumbnail)
+2. `docs/screenshots/apply-chat.jpg`: the Spanish chat with a document read by Claude
+3. `docs/screenshots/console-case.jpg`: the AI case file, policy checks and automated checks
+4. `docs/screenshots/apply-paid.jpg`: money sent
+5. `docs/screenshots/give-need.jpg` and `give-thanks.jpg`: funding an approved need
+6. `docs/screenshots/console-money.jpg`: PayPal payouts and captures with IDs and fees
+7. `docs/screenshots/console-copilot.jpg`: the treasurer copilot reconciling with PayPal
+
+Retake 2–3 of these in sandbox + Claude mode once deployed; the committed ones come from offline mode.
 
 ## Built with
 

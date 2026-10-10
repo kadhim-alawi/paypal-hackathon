@@ -51,7 +51,7 @@ Tideover gives a five-volunteer fund the speed of GiveDirectly with the controls
 
 - **Public fund pages** show the live ledger: every gift and grant (anonymized, with consent-based one-line stories), the fund's balance, and the median minutes from request to cash.
 - **Fund a specific need:** when a request is approved but the fund is short, it appears on the page. A donor's PayPal or Venmo payment (PayPal JS SDK Smart Buttons) is captured and the grant pays out **immediately**, and the donor watches it arrive.
-- **Agentic giving over MCP:** Tideover runs a Model Context Protocol server at `/mcp`. An assistant like Claude can list funds, find approved needs and start a donation. It gets back a PayPal checkout link that the human approves, so nothing is charged without the person. Agent-initiated gifts are labelled as such in the books.
+- **Agentic giving over MCP:** Tideover runs a Model Context Protocol server at `/mcp`. An assistant like Claude can list funds, find approved needs and start a donation. It gets back a PayPal checkout link that the human approves, so nothing is charged without the person. Agent-initiated gifts are labelled as such in the books. Try it from a terminal with the included donor agent: `npm run agent -- "Give $25 to an approved need"`.
 
 | ![Approved need](docs/screenshots/give-need.jpg) | ![Thanks, delivered](docs/screenshots/give-thanks.jpg) |
 |---|---|
@@ -79,6 +79,18 @@ Tideover gives a five-volunteer fund the speed of GiveDirectly with the controls
 Prompt caching keeps the long policy prompts cheap, server-side fallbacks keep requests flowing through model overloads, and effort is tuned per task. Every AI call has a deterministic fallback, so the product keeps working (clearly labelled) if the AI is unavailable.
 
 ## Try it
+
+### Access for judges
+
+| | |
+|---|---|
+| Hosted demo | _add your Render URL here_ |
+| Staff console | `/console` → **Sign in as Sam (reviewer)** or **Avery (admin)**, one click (`reviewer@tideover.app` / `tideover-review`, `admin@tideover.app` / `tideover-admin`) |
+| PayPal sandbox buyer (donations, Log in with PayPal) | _sandbox personal account email_ / _password_ (test credentials, fake money) |
+| Sample documents to upload | [`demo-assets/`](demo-assets/) |
+| AI agent giving | `cd server && ANTHROPIC_API_KEY=... npm run agent -- --url <demo URL> "Give $25 to an approved need"` |
+
+No keys are needed to run it locally: without them it runs fully offline with the PayPal simulator (see *Run it locally*).
 
 ### Judge's tour (about 5 minutes)
 
@@ -153,7 +165,7 @@ More detail in **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
 ## Quality
 
-- `cd server && npm test`: 39 tests covering the applicant journey, approvals and the two-person rule, sponsored needs, risk checks, webhooks (including signature verification), MCP, reconciliation, the PayPal REST client against recorded wire formats, and the Claude provider against a fake Messages API (streaming tool loop, structured outputs, vision, fallbacks).
+- `cd server && npm test`: 40 tests covering the applicant journey, approvals and the two-person rule, sponsored needs, risk checks, webhooks (including signature verification), MCP, reconciliation, the PayPal REST client against recorded wire formats, and the Claude provider against a fake Messages API (streaming tool loop, structured outputs, vision, fallbacks).
 - `e2e/journey.mjs` drives the real UI end to end with Playwright: apply in Spanish with a document → Log in with PayPal → submit → reviewer approves → payout → applicant sees *Paid*; donor funds a need → instant grant; console pages.
 - `npm run verify:paypal` and `npm run verify:claude` run live checks against your sandbox app and API key.
 

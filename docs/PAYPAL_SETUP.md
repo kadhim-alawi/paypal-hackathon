@@ -84,6 +84,14 @@ The script runs against your sandbox app and checks, in order:
 
 Each step prints ✓ or the PayPal error with its `debug_id`. Then run the app, apply with a sandbox personal account, approve the case in the console, and watch the payout arrive in that account.
 
+## 7. Give judges access
+
+The rules ask for any test accounts or sandbox logins needed to try the project.
+
+1. Create a dedicated sandbox **personal** account for judges (for example `judges@tideover-demo.example`) with a balance, and a memorable password.
+2. Put its email and password in the README's *Access for judges* table and in the Devpost testing instructions. It's a sandbox account, so it only holds test money.
+3. Keep the hosted demo running until judging ends (**Dec 15, 2026, 8:00 AM PT**). The `render.yaml` plans (starter web service, basic Postgres) stay up and don't expire. Avoid Render's free tiers for the demo: free web services sleep when idle, and free Postgres databases expire after a limited time (30 days when this was written).
+
 ## Troubleshooting
 
 | Symptom | Fix |
