@@ -5,6 +5,7 @@ import '../../core/app_scope.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../theme.dart';
+import '../../widgets/rich_message.dart';
 import '../../widgets/ui.dart';
 
 class AssistantAvatar extends StatelessWidget {
@@ -55,11 +56,13 @@ class ChatBubble extends StatelessWidget {
           ),
         if (message.content.isEmpty && streaming)
           const _TypingDots()
-        else
+        else if (mine)
           SelectableText(
             message.content,
-            style: t.bodyLarge?.copyWith(color: mine ? Colors.white : T.ink, height: 1.45, fontSize: 15.5),
-          ),
+            style: t.bodyLarge?.copyWith(color: Colors.white, height: 1.45, fontSize: 15.5),
+          )
+        else
+          RichMessage(message.content, style: t.bodyLarge!.copyWith(color: T.ink, height: 1.45, fontSize: 15.5)),
       ]),
     );
     return Padding(

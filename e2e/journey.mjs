@@ -139,7 +139,7 @@ for (const [path, name] of [["/console/money", "console-money"], ["/console/fund
   await open(staff, path);
   await snap(staff, name);
 }
-await button(staff, "How much can we still grant").click().catch(() => {});
+await staff.getByRole("checkbox", { name: "How much can we still grant", exact: false }).first().click(); // Flutter exposes chips as checkboxes
 await sleep(4000);
 await snap(staff, "console-copilot-answer");
 

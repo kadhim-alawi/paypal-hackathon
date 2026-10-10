@@ -52,6 +52,39 @@ export const simulatedCaptureFee = (cents: number) => Math.round(cents * 0.0199)
 /** PayPal Payouts US domestic fee: 2% capped at $20, min $0.25. */
 export const simulatedPayoutFee = (cents: number) => Math.min(2000, Math.max(25, Math.round(cents * 0.02)));
 
+/** Tideover's view of what happened at PayPal, used to rebuild the simulator after a restart. */
+export interface SimulatorHistory {
+  captures: Array<{
+    orderId: string;
+    captureId: string;
+    amountCents: number;
+    currency: string;
+    feeCents: number;
+    customId: string | null;
+    payerEmail: string | null;
+    payerName: string | null;
+    capturedAt: Date;
+    refunded: boolean;
+  }>;
+  payouts: Array<{
+    batchId: string;
+    senderBatchId: string;
+    senderItemId: string;
+    itemId: string | null;
+    transactionId: string | null;
+    transactionStatus: PayoutTransactionStatus | null;
+    recipientType: CreatePayoutInput["recipientType"];
+    recipientWallet: CreatePayoutInput["recipientWallet"];
+    receiver: string;
+    amountCents: number;
+    currency: string;
+    feeCents: number | null;
+    note: string;
+    createdAt: Date;
+    completedAt: Date | null;
+  }>;
+}
+
 interface SimOrder {
   order: PayPalOrder;
   input: CreateOrderInput;
@@ -453,6 +486,105 @@ export class SimulatedPayPalGateway implements PayPalGateway {
   }
 
   // ---------------------------------------------------------------- helpers
+
+  /**
+   * Rebuilds the simulator's PayPal-side history from Tideover's records after a
+   * restart, the way the real PayPal account keeps its history. Captures become
+   * refundable again and show in transaction search; payouts that were still in
+   * flight settle as usual.
+   */
+  restore(history: SimulatorHistory): void {
+    for (const c of history.captures) {
+      if (this.captures.has(c.captureId)) continue;
+      const value = toPayPalValue(c.amountCents);
+      const money = { currency_code: c.currency, value };
+      const [given, ...rest] = (c.payerName ?? "").split(" ");
+      const capture: Capture = {
+        id: c.captureId,
+        status: c.refunded ? "REFUNDED" : "COMPLETED",
+        amount: money,
+        custom_id: c.customId ?? undefined,
+        create_time: c.capturedAt.toISOString(),
+        seller_receivable_breakdown: {
+          gross_amount: money,
+          paypal_fee: { currency_code: c.currency, value: toPayPalValue(c.feeCents) },
+          net_amount: { currency_code: c.currency, value: toPayPalValue(c.amountCents - c.feeCents) },
+        },
+      };
+      const order: PayPalOrder = {
+        id: c.orderId,
+        status: "COMPLETED",
+        create_time: c.capturedAt.toISOString(),
+        payer: c.payerEmail ? { email_address: c.payerEmail, name: { given_name: given, surname: rest.join(" ") } } : undefined,
+        purchase_units: [{ reference_id: c.customId ?? undefined, custom_id: c.customId ?? undefined, amount: money, payments: { captures: [capture] } }],
+      };
+      const input: CreateOrderInput = {
+        amountCents: c.amountCents,
+        currency: c.currency,
+        referenceId: c.customId ?? c.orderId,
+        description: "Restored order",
+        brandName: "Tideover",
+        flow: "buttons",
+        requestId: `restored-${c.orderId}`,
+        returnUrl: this.opts.publicUrl,
+        cancelUrl: this.opts.publicUrl,
+      };
+      this.orders.set(c.orderId, { order, input, captureRequestId: `restored-${c.orderId}` });
+      this.captures.set(c.captureId, { capture, orderId: c.orderId });
+    }
+
+    for (const p of history.payouts) {
+      if (this.payouts.has(p.batchId)) continue;
+      const itemId = p.itemId ?? id(13);
+      const input: CreatePayoutInput = {
+        senderBatchId: p.senderBatchId,
+        senderItemId: p.senderItemId,
+        emailSubject: "Restored payout",
+        emailMessage: "",
+        recipientType: p.recipientType,
+        recipientWallet: p.recipientWallet,
+        receiver: p.receiver,
+        amountCents: p.amountCents,
+        currency: p.currency,
+        note: p.note,
+      };
+      const settled = p.transactionStatus != null && p.transactionStatus !== "PENDING";
+      const fee = p.feeCents ?? simulatedPayoutFee(p.amountCents);
+      const batch: PayoutBatch = {
+        batch_header: {
+          payout_batch_id: p.batchId,
+          batch_status: settled ? "SUCCESS" : "PENDING",
+          time_created: p.createdAt.toISOString(),
+          time_completed: settled ? (p.completedAt ?? p.createdAt).toISOString() : undefined,
+          sender_batch_header: { sender_batch_id: p.senderBatchId, email_subject: input.emailSubject },
+          amount: { currency: p.currency, value: toPayPalValue(p.amountCents) },
+        },
+        items: [
+          {
+            payout_item_id: itemId,
+            payout_batch_id: p.batchId,
+            transaction_status: settled ? p.transactionStatus! : "PENDING",
+            transaction_id: p.transactionId ?? undefined,
+            time_processed: settled ? (p.completedAt ?? p.createdAt).toISOString() : undefined,
+            payout_item_fee: p.transactionId ? { currency: p.currency, value: toPayPalValue(fee) } : undefined,
+            payout_item: {
+              recipient_type: p.recipientType,
+              amount: { currency: p.currency, value: toPayPalValue(p.amountCents) },
+              note: p.note,
+              receiver: p.receiver,
+              sender_item_id: p.senderItemId,
+              recipient_wallet: p.recipientWallet,
+            },
+          },
+        ],
+        links: [{ href: `${this.opts.publicUrl}/sim/paypal/v1/payments/payouts/${p.batchId}`, rel: "self", method: "GET" }],
+      };
+      this.payouts.set(p.batchId, { batch, input, settleAt: Date.now() + this.opts.payoutDelayMs, settled });
+      this.payoutBySenderBatch.set(p.senderBatchId, p.batchId);
+      this.itemToBatch.set(itemId, p.batchId);
+      if (!settled) this.scheduleSettle(p.batchId);
+    }
+  }
 
   /** Test helper: settle every in-flight payout immediately. */
   async flushPayouts(): Promise<void> {

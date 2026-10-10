@@ -181,7 +181,7 @@ export async function copilotTools(s: Services, user: User): Promise<CopilotTool
     {
       name: "reconcile_with_paypal",
       description:
-        "Compares Tideover's records with PayPal's transaction history for the last N days (max 31): captured donations and sent payouts that are missing on either side.",
+        "Compares Tideover's records with PayPal's transaction history for the last N days (max 31), in both directions: captured donations and sent payouts PayPal doesn't show, and PayPal payments Tideover has no record of.",
       inputSchema: obj({ days: { type: "integer", minimum: 1, maximum: 31 } }),
       run: async (input) => {
         const days = Math.min(31, Math.max(1, Number(input.days ?? 7)));
@@ -189,32 +189,42 @@ export async function copilotTools(s: Services, user: User): Promise<CopilotTool
         const start = new Date(end.getTime() - days * 86_400_000);
         const txns = await s.paypal.listTransactions({ start, end });
         const ids = new Set(txns.map((t) => t.transactionId));
-        const captured = await s.db
-          .select()
-          .from(donations)
-          .where(eq(donations.status, "captured"));
-        const sent = await s.db
-          .select()
-          .from(payouts)
-          .where(inArray(payouts.status, ["success", "unclaimed"]));
         const inWindow = (d: Date | null) => !!d && d >= start && d <= end;
-        const missingDonations = captured
-          .filter((d) => inWindow(d.capturedAt) && d.paypalCaptureId && !ids.has(d.paypalCaptureId))
-          .map((d) => ({ donationId: d.id, captureId: d.paypalCaptureId, amountCents: d.amountCents }));
-        const missingPayouts = sent
-          .filter((p) => inWindow(p.completedAt) && p.paypalTransactionId && !ids.has(p.paypalTransactionId))
-          .map((p) => ({ payoutId: p.id, transactionId: p.paypalTransactionId, amountCents: p.amountCents }));
+        const allDonations = await s.db.select().from(donations).where(inArray(donations.status, ["captured", "refunded"]));
+        const allPayouts = await s.db.select().from(payouts).where(inArray(payouts.status, ["success", "unclaimed"]));
+        const known = new Set([
+          ...allDonations.map((d) => d.paypalCaptureId),
+          ...allPayouts.map((p) => p.paypalTransactionId),
+        ]);
+        const donationsInWindow = allDonations.filter((d) => d.status === "captured" && inWindow(d.capturedAt));
+        const payoutsInWindow = allPayouts.filter((p) => inWindow(p.completedAt));
+        const viaPayPal = {
+          donations: donationsInWindow.filter((d) => d.paypalCaptureId),
+          payouts: payoutsInWindow.filter((p) => p.paypalTransactionId),
+        };
         return {
           windowDays: days,
           paypalTransactions: txns.length,
-          tideoverDonations: captured.filter((d) => inWindow(d.capturedAt)).length,
-          tideoverPayouts: sent.filter((p) => inWindow(p.completedAt)).length,
-          missingDonations,
-          missingPayouts,
+          tideoverDonations: viaPayPal.donations.length,
+          tideoverPayouts: viaPayPal.payouts.length,
+          missingAtPayPal: [
+            ...viaPayPal.donations
+              .filter((d) => !ids.has(d.paypalCaptureId!))
+              .map((d) => ({ kind: "donation", id: d.id, paypalId: d.paypalCaptureId, amountCents: d.amountCents })),
+            ...viaPayPal.payouts
+              .filter((p) => !ids.has(p.paypalTransactionId!))
+              .map((p) => ({ kind: "payout", id: p.id, paypalId: p.paypalTransactionId, amountCents: p.amountCents })),
+          ],
+          // Payments only (T00xx); fees, refunds and transfers are not Tideover records.
+          unknownToTideover: txns
+            .filter((t) => /^T00/.test(t.eventCode) && !known.has(t.transactionId))
+            .slice(0, 20)
+            .map((t) => ({ paypalId: t.transactionId, eventCode: t.eventCode, amountCents: t.amountCents, at: t.initiatedAt })),
+          recordsWithoutPayPalIds: donationsInWindow.length + payoutsInWindow.length - viaPayPal.donations.length - viaPayPal.payouts.length,
           note:
             s.paypal.mode === "simulated"
               ? "PayPal simulator data."
-              : "PayPal transaction search can lag up to 3 hours behind real time.",
+              : "PayPal transaction search can lag up to 3 hours behind real time, so the newest items may show as missing.",
         };
       },
     },

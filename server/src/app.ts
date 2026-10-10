@@ -18,6 +18,7 @@ import { EventBus } from "./lib/events.js";
 import { HttpError } from "./lib/errors.js";
 import { mcpRoutes } from "./mcp/server.js";
 import { createPayPalGateway, PayPalApiError, type PayPalGateway } from "./paypal/index.js";
+import { restoreSimulatorHistory } from "./paypal/restore.js";
 import { SimulatedPayPalGateway } from "./paypal/simulator.js";
 import { applicantRoutes } from "./routes/applicant.js";
 import { donationRoutes } from "./routes/donations.js";
@@ -127,6 +128,10 @@ export async function buildApp(opts: BuildOptions): Promise<{ app: FastifyInstan
   if (config.seedDemo) {
     const seeded = await seedIfEmpty(services);
     if (seeded) app.log.info("Seeded demo data");
+  }
+  if (paypal instanceof SimulatedPayPalGateway) {
+    const restored = await restoreSimulatorHistory(services.db, paypal);
+    if (restored) app.log.info(`PayPal simulator: restored ${restored} past transactions`);
   }
 
   let stopPoller = () => {};

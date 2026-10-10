@@ -298,26 +298,124 @@ export class HeuristicAi implements AiProvider {
   async copilotTurn(ctx: CopilotContext): Promise<string> {
     const question = ctx.history[ctx.history.length - 1]?.content.toLowerCase() ?? "";
     const pick = (name: string) => ctx.tools.find((t) => t.name === name);
+    const days = Number(/(\d+)\s*days?/.exec(question)?.[1] ?? 7);
     const plan: Array<[string, Record<string, unknown>]> = [];
-    if (/donat|donor|gift/.test(question)) plan.push(["list_donations", { limit: 10 }]);
+    if (/reconcil|match|missing/.test(question)) plan.push(["reconcile_with_paypal", { days }]);
+    if (/donat|donor|gift/.test(question)) plan.push(["list_donations", { limit: 100 }]);
     if (/payout|paid|sent/.test(question)) plan.push(["list_payouts", { limit: 10 }]);
-    if (/pending|queue|review|waiting/.test(question)) plan.push(["search_applications", { status: "in_review" }]);
-    if (/transaction|paypal/.test(question)) plan.push(["paypal_list_transactions", {}]);
+    if (/pending|queue|review|waiting|decision/.test(question)) plan.push(["search_applications", { status: "in_review" }]);
+    if (/transaction|paypal/.test(question) && !plan.some(([n]) => n === "reconcile_with_paypal")) {
+      plan.push(["paypal_list_transactions", { days }]);
+    }
     if (plan.length === 0) plan.push(["get_fund_overview", {}]);
 
-    const parts: string[] = ["(Offline mode: answers come from simple rules, not AI.)"];
+    const parts: string[] = ["_Offline mode: this answer comes from simple rules, not AI._"];
     for (const [name, input] of plan) {
       const tool = pick(name);
       if (!tool) continue;
       try {
         const result = await tool.run(input);
-        const preview = JSON.stringify(result);
-        ctx.onTool({ name, input, ok: true, preview: preview.slice(0, 280) });
-        parts.push(`${name}:\n${preview.slice(0, 1500)}`);
+        ctx.onTool({ name, input, ok: true, preview: JSON.stringify(result).slice(0, 280) });
+        parts.push(describeToolResult(name, result));
       } catch (err) {
         ctx.onTool({ name, input, ok: false, preview: String(err) });
+        parts.push(`I couldn't read ${name.replace(/_/g, " ")} just now.`);
       }
     }
     return streamOut(parts.join("\n\n"), ctx.onDelta);
+  }
+}
+
+type Row = Record<string, unknown>;
+const usd = (cents: unknown) => formatMoney(Number(cents ?? 0));
+const rows = (x: unknown): Row[] => (Array.isArray(x) ? (x as Row[]) : []);
+const duration = (minutes: number) => {
+  const m = Math.max(1, Math.round(minutes));
+  return m < 120 ? `${m} min` : m < 2880 ? `${Math.round(m / 60)} hours` : `${Math.round(m / 1440)} days`;
+};
+const plural = (n: unknown, word: string) => `${Number(n ?? 0)} ${word}${Number(n) === 1 ? "" : "s"}`;
+
+/** Turns a copilot tool result into a short, readable answer. */
+function describeToolResult(name: string, result: unknown): string {
+  switch (name) {
+    case "get_fund_overview":
+      return [
+        "**What each fund can still grant right now**",
+        ...rows(result).map((f) => {
+          const waiting = Number(f.awaitingCount ?? 0);
+          const minutes = f.medianMinutesToCash == null ? "" : `, median ${duration(Number(f.medianMinutesToCash))} to cash`;
+          return (
+            `- **${f.fund}**: ${usd(f.availableCents)} available. Raised ${usd(f.raisedCents)}, granted ${usd(f.grantedCents)} to ${Number(f.peopleHelped) === 1 ? "1 person" : `${f.peopleHelped} people`}${minutes}.` +
+            (waiting ? ` ${waiting} approved request${waiting === 1 ? "" : "s"} (${usd(f.awaitingCents)}) waiting on donations.` : "") +
+            (Number(f.inReviewCount ?? 0) ? ` ${f.inReviewCount} in review.` : "")
+          );
+        }),
+      ].join("\n");
+    case "search_applications": {
+      const list = rows(result).sort((a, b) => String(a.submittedAt ?? "").localeCompare(String(b.submittedAt ?? "")));
+      if (list.length === 0) return "No requests are waiting for a decision.";
+      return [
+        `**${list.length} request${list.length === 1 ? "" : "s"} waiting for a decision, oldest first**`,
+        ...list.slice(0, 10).map((a) => {
+          const waited = a.submittedAt ? duration((Date.now() - Date.parse(String(a.submittedAt))) / 60_000) : "";
+          return `- **${a.publicRef}** (${a.fundName}): ${a.categoryLabel}, ${usd(a.amountRequestedCents)} requested${waited ? `, waiting ${waited}` : ""}. AI suggests ${String(a.aiRecommendation ?? "review").replace(/_/g, " ")}; risk ${a.riskLevel}.`;
+        }),
+      ].join("\n");
+    }
+    case "list_donations": {
+      const captured = rows(result).filter((d) => d.status === "captured");
+      if (captured.length === 0) return "No captured donations yet.";
+      const byDonor = new Map<string, { cents: number; n: number }>();
+      for (const d of captured) {
+        const who = d.anonymous ? "Anonymous" : String(d.donorName ?? d.donorEmail ?? "Unknown");
+        const cur = byDonor.get(who) ?? { cents: 0, n: 0 };
+        byDonor.set(who, { cents: cur.cents + Number(d.amountCents ?? 0), n: cur.n + 1 });
+      }
+      const top = [...byDonor.entries()].sort((a, b) => b[1].cents - a[1].cents).slice(0, 5);
+      const agents = captured.filter((d) => d.source === "agent");
+      const agentNames = [...new Set(agents.map((d) => String(d.agentName ?? "an AI agent")))];
+      return [
+        `**Top donors** (from the last ${captured.length} captured donations)`,
+        ...top.map(([who, v]) => `- ${who}: ${usd(v.cents)} across ${v.n} gift${v.n === 1 ? "" : "s"}`),
+        agents.length
+          ? `${agents.length} donation${agents.length === 1 ? "" : "s"} (${usd(agents.reduce((s, d) => s + Number(d.amountCents ?? 0), 0))}) came through AI agents: ${agentNames.join(", ")}.`
+          : "None of these came through AI agents.",
+      ].join("\n");
+    }
+    case "list_payouts": {
+      const list = rows(result);
+      if (list.length === 0) return "No payouts yet.";
+      return [
+        "**Recent PayPal payouts**",
+        ...list.map((p) => `- ${usd(p.amountCents)} to ${p.receiver}: ${p.status}${p.paypalTransactionId ? ` (PayPal ${p.paypalTransactionId})` : ""}`),
+      ].join("\n");
+    }
+    case "reconcile_with_paypal": {
+      const r = (result ?? {}) as Row;
+      const missing = rows(r.missingAtPayPal);
+      const unknown = rows(r.unknownToTideover);
+      const imported = Number(r.recordsWithoutPayPalIds ?? 0);
+      return [
+        `**Reconciliation, last ${r.windowDays} days**`,
+        `- PayPal reports ${plural(r.paypalTransactions, "transaction")}; Tideover recorded ${plural(r.tideoverDonations, "donation")} and ${plural(r.tideoverPayouts, "payout")} through PayPal.`,
+        missing.length === 0 && unknown.length === 0 ? "- Everything matches in both directions." : "",
+        ...missing.map((m) => `- ${m.kind === "donation" ? "Donation" : "Payout"} ${m.paypalId} (${usd(m.amountCents)}) is not in PayPal's history.`),
+        ...unknown.map((t) => `- PayPal ${t.eventCode} ${t.paypalId} (${usd(t.amountCents)}) has no Tideover record.`),
+        imported ? `- ${imported} imported record${imported === 1 ? "" : "s"} without PayPal ids (demo history) ${imported === 1 ? "was" : "were"} not compared.` : "",
+        r.note ? `_${r.note}_` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+    }
+    case "paypal_list_transactions": {
+      const list = rows(result);
+      if (list.length === 0) return "PayPal shows no transactions in that window.";
+      return [
+        `**${list.length} PayPal transactions**`,
+        ...list.slice(0, 10).map((t) => `- ${String(t.initiatedAt).slice(0, 10)} · ${t.eventCode} · ${usd(t.amountCents)} · ${t.status}`),
+      ].join("\n");
+    }
+    default:
+      return JSON.stringify(result).slice(0, 1500);
   }
 }
