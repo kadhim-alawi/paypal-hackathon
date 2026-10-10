@@ -3,6 +3,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../core/app_scope.dart';
 import '../../core/format.dart';
+import '../../core/l10n.dart';
 import '../../core/models.dart';
 import '../../theme.dart';
 import '../../widgets/rich_message.dart';
@@ -19,9 +20,10 @@ class AssistantAvatar extends StatelessWidget {
 
 /// One message in the conversation.
 class ChatBubble extends StatelessWidget {
-  const ChatBubble({super.key, required this.message, this.streaming = false});
+  const ChatBubble({super.key, required this.message, this.streaming = false, this.tr = Tr.en});
   final ChatMessage message;
   final bool streaming;
+  final Tr tr;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +53,7 @@ class ChatBubble extends StatelessWidget {
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Icon(special == 'paid' ? Icons.verified_rounded : Icons.check_circle_rounded, color: T.tealDark, size: 18),
               const SizedBox(width: 6),
-              Text(special == 'paid' ? 'Money sent' : 'Approved', style: t.labelLarge?.copyWith(color: T.tealDark)),
+              Text(special == 'paid' ? tr('Money sent', 'Dinero enviado') : tr('Approved', 'Aprobada'), style: t.labelLarge?.copyWith(color: T.tealDark)),
             ]),
           ),
         if (message.content.isEmpty && streaming)
@@ -117,9 +119,10 @@ class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderState
 
 /// Small centered system notes and document cards.
 class EventItem extends StatelessWidget {
-  const EventItem({super.key, required this.message, this.thumbnailUrl});
+  const EventItem({super.key, required this.message, this.thumbnailUrl, this.tr = Tr.en});
   final ChatMessage message;
   final String? thumbnailUrl;
+  final Tr tr;
 
   @override
   Widget build(BuildContext context) {
@@ -153,14 +156,14 @@ class EventItem extends StatelessWidget {
                     const Icon(Icons.document_scanner_rounded, size: 16, color: T.tealDark),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(AppScope.of(context).info.aiMode == 'claude' ? 'Document read by AI' : 'Document received',
+                      child: Text(AppScope.of(context).info.aiMode == 'claude' ? tr('Document read by AI', 'Documento leído por la IA') : tr('Document received', 'Documento recibido'),
                           style: t.labelMedium?.copyWith(color: T.tealDark)),
                     ),
                     if (amount is num) Pill(moneySmart(amount), color: T.tealDark, dense: true),
                   ]),
                   const SizedBox(height: 4),
                   Text(
-                    (message.meta['title'] as String?) ?? 'Document',
+                    (message.meta['title'] as String?) ?? tr('Document', 'Documento'),
                     style: t.titleSmall,
                   ),
                   if (message.meta['issuer'] is String)
@@ -201,12 +204,13 @@ class EventItem extends StatelessWidget {
 
 /// Text box with voice input, attachments and send.
 class Composer extends StatefulWidget {
-  const Composer({super.key, required this.onSend, this.onAttach, this.enabled = true, this.busy = false, this.hint});
+  const Composer({super.key, required this.onSend, this.onAttach, this.enabled = true, this.busy = false, this.hint, this.tr = Tr.en});
   final Future<void> Function(String text) onSend;
   final VoidCallback? onAttach;
   final bool enabled;
   final bool busy;
   final String? hint;
+  final Tr tr;
 
   @override
   State<Composer> createState() => _ComposerState();
@@ -245,7 +249,7 @@ class _ComposerState extends State<Composer> {
       );
     }
     if (!_speechReady) {
-      if (mounted) showSnack(context, 'Voice input isn\'t available in this browser. You can type instead.');
+      if (mounted) showSnack(context, widget.tr('Voice input isn\'t available in this browser. You can type instead.', 'La voz no está disponible en este navegador. Puede escribir.'));
       return;
     }
     _prefix = _text.text.trim().isEmpty ? '' : '${_text.text.trim()} ';
@@ -256,7 +260,12 @@ class _ComposerState extends State<Composer> {
         _text.selection = TextSelection.collapsed(offset: _text.text.length);
         setState(() {});
       },
-      listenOptions: SpeechListenOptions(partialResults: true, listenMode: ListenMode.dictation, cancelOnError: true),
+      listenOptions: SpeechListenOptions(
+        partialResults: true,
+        listenMode: ListenMode.dictation,
+        cancelOnError: true,
+        localeId: widget.tr.es ? 'es_US' : null,
+      ),
     );
   }
 
@@ -292,7 +301,7 @@ class _ComposerState extends State<Composer> {
         child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           if (widget.onAttach != null)
             IconButton(
-              tooltip: 'Add a photo or document',
+              tooltip: widget.tr('Add a photo or document', 'Agregar una foto o documento'),
               onPressed: widget.enabled ? widget.onAttach : null,
               icon: const Icon(Icons.add_photo_alternate_outlined),
             ),
@@ -307,7 +316,9 @@ class _ComposerState extends State<Composer> {
               onSubmitted: (_) => _send(),
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                hintText: _listening ? 'Listening… speak in any language' : (widget.hint ?? 'Write in any language…'),
+                hintText: _listening
+                    ? widget.tr('Listening… speak in any language', 'Escuchando… hable en cualquier idioma')
+                    : (widget.hint ?? widget.tr('Write in any language…', 'Escriba en cualquier idioma…')),
                 fillColor: T.paper,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
                 enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
@@ -318,14 +329,14 @@ class _ComposerState extends State<Composer> {
           const SizedBox(width: 6),
           if (!hasText)
             IconButton.filled(
-              tooltip: _listening ? 'Stop' : 'Speak',
+              tooltip: _listening ? widget.tr('Stop', 'Detener') : widget.tr('Speak', 'Hablar'),
               style: IconButton.styleFrom(backgroundColor: _listening ? T.coral : T.tealSoft, foregroundColor: _listening ? Colors.white : T.tealDark),
               onPressed: widget.enabled ? _toggleMic : null,
               icon: Icon(_listening ? Icons.stop_rounded : Icons.mic_rounded),
             )
           else
             IconButton.filled(
-              tooltip: 'Send',
+              tooltip: widget.tr('Send', 'Enviar'),
               onPressed: widget.enabled && !widget.busy ? _send : null,
               icon: const Icon(Icons.arrow_upward_rounded),
             ),

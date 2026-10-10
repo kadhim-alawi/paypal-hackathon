@@ -57,6 +57,7 @@ class _PayoutPickerState extends State<PayoutPicker> {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final v = widget.controller.view!;
+    final tr = widget.controller.tr;
     final has = v.payoutMethod != null;
     if (has && !_editing) {
       return Container(
@@ -70,20 +71,20 @@ class _PayoutPickerState extends State<PayoutPicker> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
                 switch (v.payoutMethod) {
-                  'paypal_account' => v.paypalName != null ? 'PayPal · ${v.paypalName}' : 'PayPal account',
+                  'paypal_account' => v.paypalName != null ? 'PayPal · ${v.paypalName}' : tr('PayPal account', 'Cuenta de PayPal'),
                   'venmo_phone' => 'Venmo',
-                  _ => 'PayPal email',
+                  _ => tr('PayPal email', 'Correo de PayPal'),
                 },
                 style: t.titleSmall,
               ),
               Text(v.payoutDisplay ?? '', style: t.bodySmall),
               if (v.payoutMethod == 'paypal_account' && v.payoutVerified) ...[
                 const SizedBox(height: 6),
-                const VerifiedBadge(),
+                VerifiedBadge(label: tr('Verified with PayPal', 'Verificada con PayPal')),
               ],
             ]),
           ),
-          if (v.canChangePayout) TextButton(onPressed: () => setState(() => _editing = true), child: const Text('Change')),
+          if (v.canChangePayout) TextButton(onPressed: () => setState(() => _editing = true), child: Text(tr('Change', 'Cambiar'))),
         ]),
       );
     }
@@ -92,22 +93,22 @@ class _PayoutPickerState extends State<PayoutPicker> {
         style: FilledButton.styleFrom(backgroundColor: T.paypalLight),
         onPressed: _busy ? null : _connect,
         icon: const Icon(Icons.account_balance_wallet_rounded),
-        label: const Text('Connect PayPal'),
+        label: Text(tr('Connect PayPal', 'Conectar PayPal')),
       ),
       const SizedBox(height: 6),
-      Text('Fastest. Verifies your account so small requests can be approved right away.',
+      Text(tr('Fastest. Verifies your account so small requests can be approved right away.', 'Lo más rápido. Verifica su cuenta para que las solicitudes pequeñas se aprueben enseguida.'),
           style: t.bodySmall, textAlign: TextAlign.center),
       const SizedBox(height: 14),
       Row(children: [
         const Expanded(child: Divider()),
-        Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Text('or send it to', style: t.bodySmall)),
+        Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Text(tr('or send it to', 'o envíelo a'), style: t.bodySmall)),
         const Expanded(child: Divider()),
       ]),
       const SizedBox(height: 12),
       SegmentedButton<String>(
-        segments: const [
-          ButtonSegment(value: 'paypal_email', label: Text('PayPal email'), icon: Icon(Icons.alternate_email_rounded)),
-          ButtonSegment(value: 'venmo_phone', label: Text('Venmo'), icon: Icon(Icons.phone_iphone_rounded)),
+        segments: [
+          ButtonSegment(value: 'paypal_email', label: Text(tr('PayPal email', 'Correo de PayPal')), icon: const Icon(Icons.alternate_email_rounded)),
+          const ButtonSegment(value: 'venmo_phone', label: Text('Venmo'), icon: Icon(Icons.phone_iphone_rounded)),
         ],
         selected: {_alt},
         onSelectionChanged: (s) => setState(() {
@@ -122,21 +123,23 @@ class _PayoutPickerState extends State<PayoutPicker> {
             controller: _value,
             keyboardType: _alt == 'venmo_phone' ? TextInputType.phone : TextInputType.emailAddress,
             decoration: InputDecoration(
-              hintText: _alt == 'venmo_phone' ? 'US mobile number on your Venmo' : 'Email for your PayPal account',
+              hintText: _alt == 'venmo_phone'
+                  ? tr('US mobile number on your Venmo', 'Su número de celular de EE. UU. en Venmo')
+                  : tr('Email for your PayPal account', 'Correo de su cuenta de PayPal'),
             ),
           ),
         ),
         const SizedBox(width: 8),
-        FilledButton.tonal(onPressed: _busy ? null : _saveAlt, child: const Text('Save')),
+        FilledButton.tonal(onPressed: _busy ? null : _saveAlt, child: Text(tr('Save', 'Guardar'))),
       ]),
       const SizedBox(height: 6),
       Text(
         _alt == 'venmo_phone'
-            ? 'Venmo sends a text if you don\'t have an account yet.'
-            : 'No PayPal account? PayPal emails you a link to claim it for free.',
+            ? tr('Venmo sends a text if you don\'t have an account yet.', 'Venmo le envía un mensaje de texto si aún no tiene cuenta.')
+            : tr('No PayPal account? PayPal emails you a link to claim it for free.', '¿No tiene PayPal? PayPal le envía un enlace por correo para reclamarlo gratis.'),
         style: t.bodySmall,
       ),
-      if (has) TextButton(onPressed: () => setState(() => _editing = false), child: const Text('Cancel')),
+      if (has) TextButton(onPressed: () => setState(() => _editing = false), child: Text(tr('Cancel', 'Cancelar'))),
     ]);
   }
 }
@@ -199,13 +202,16 @@ class _ReviewSheetState extends State<ReviewSheet> {
       listenable: widget.controller,
       builder: (context, _) {
         final v = widget.controller.view!;
+        final tr = widget.controller.tr;
         final cat = v.categories.where((c) => c.key == _category).firstOrNull;
         return ListView(
           padding: EdgeInsets.fromLTRB(20, 0, 20, MediaQuery.viewInsetsOf(context).bottom + 24),
           children: [
-            Text('Review your request', style: t.headlineSmall),
+            Text(tr('Review your request', 'Revise su solicitud'), style: t.headlineSmall),
             const SizedBox(height: 6),
-            Text('A volunteer from ${v.fundName} will review it. You can still add messages afterwards.',
+            Text(
+                tr('A volunteer from ${v.fundName} will review it. You can still add messages afterwards.',
+                    'Una persona voluntaria de ${v.fundName} la revisará. Después puede seguir enviando mensajes.'),
                 style: t.bodyMedium?.copyWith(color: T.muted)),
             const SizedBox(height: 18),
             if (_recap != null)
@@ -222,7 +228,7 @@ class _ReviewSheetState extends State<ReviewSheet> {
             DropdownButtonFormField<String>(
               initialValue: v.categories.any((c) => c.key == _category) ? _category : null,
               isExpanded: true,
-              decoration: const InputDecoration(labelText: 'What is the money for?'),
+              decoration: InputDecoration(labelText: tr('What is the money for?', '¿Para qué es el dinero?')),
               items: [
                 for (final c in v.categories) DropdownMenuItem(value: c.key, child: Text(c.label, overflow: TextOverflow.ellipsis)),
               ],
@@ -233,40 +239,45 @@ class _ReviewSheetState extends State<ReviewSheet> {
               controller: _amount,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                labelText: 'How much do you need?',
+                labelText: tr('How much do you need?', '¿Cuánto necesita?'),
                 prefixText: '\$ ',
-                helperText: cat == null ? null : 'This fund gives up to ${money(cat.maxCents, whole: true)} for ${cat.label.toLowerCase()}.',
+                helperText: cat == null
+                    ? null
+                    : tr('This fund gives up to ${money(cat.maxCents, whole: true)} for ${cat.label.toLowerCase()}.',
+                        'Este fondo da hasta ${money(cat.maxCents, whole: true)} para esta categoría.'),
               ),
             ),
             const SizedBox(height: 20),
-            Text('Where should we send the money?', style: t.titleMedium),
+            Text(tr('Where should we send the money?', '¿Adónde enviamos el dinero?'), style: t.titleMedium),
             const SizedBox(height: 10),
             PayoutPicker(controller: widget.controller),
             const SizedBox(height: 18),
             TextField(
               controller: _email,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'Email for updates (optional)'),
+              decoration: InputDecoration(labelText: tr('Email for updates (optional)', 'Correo para recibir novedades (opcional)')),
             ),
             const SizedBox(height: 8),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               value: _consent,
               onChanged: (x) => setState(() => _consent = x),
-              title: const Text('Share an anonymous one-line story'),
-              subtitle: const Text('Shown on the fund\'s page without your name. It helps donors give faster.'),
+              title: Text(tr('Share an anonymous one-line story', 'Compartir una frase anónima')),
+              subtitle: Text(tr('Shown on the fund\'s page without your name. It helps donors give faster.',
+                  'Se muestra en la página del fondo sin su nombre. Ayuda a que la gente done más rápido.')),
             ),
             const SizedBox(height: 12),
             FilledButton(
               onPressed: v.payoutMethod == null || widget.controller.submitting ? null : _submit,
               child: widget.controller.submitting
                   ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white))
-                  : const Text('Submit request'),
+                  : Text(tr('Submit request', 'Enviar solicitud')),
             ),
             if (v.payoutMethod == null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: Text('Choose how to receive the money to submit.', style: t.bodySmall, textAlign: TextAlign.center),
+                child: Text(tr('Choose how to receive the money to submit.', 'Elija cómo recibir el dinero para poder enviar.'),
+                    style: t.bodySmall, textAlign: TextAlign.center),
               ),
           ],
         );

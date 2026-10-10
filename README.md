@@ -29,7 +29,7 @@ Tideover gives a five-volunteer fund the speed of GiveDirectly with the controls
 
 | | |
 |---|---|
-| <img src="docs/screenshots/apply-chat.jpg" width="260" alt="Chat with a document read by the AI caseworker"> | **Ask for help in any language.** A Claude caseworker asks only what the fund's policy needs, by text or voice. A photo or PDF of a bill or estimate is read on the spot: who issued it, the amount, the due date, and whether it matches the story. No account, no Social Security number. |
+| <img src="docs/screenshots/apply-chat.jpg" width="260" alt="Chat with a document read by the AI caseworker"> | **Ask for help in any language.** A Claude caseworker asks only what the fund's policy needs, by text or voice. The app's own screens switch to Spanish when that's the person's language (shown here). A photo or PDF of a bill or estimate is read on the spot: who issued it, the amount, the due date, and whether it matches the story. No account, no Social Security number. |
 | <img src="docs/screenshots/apply-review.jpg" width="260" alt="Review the request with a PayPal-verified payout account"> | **Verified payout in two taps.** *Log in with PayPal* proves the applicant controls a verified PayPal account, so the grant goes to a PayPal payer ID rather than a typed email. Venmo (phone) and PayPal email also work. |
 | <img src="docs/screenshots/apply-paid.jpg" width="260" alt="Request page showing the money was sent"> | **Live status, then cash.** The request page updates in real time: submitted, reviewed, money sent, received. The decision message arrives in the applicant's language. |
 
@@ -167,7 +167,8 @@ More detail in **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
 ## Quality
 
-- `cd server && npm test`: 40 tests covering the applicant journey, approvals and the two-person rule, sponsored needs, risk checks, webhooks (including signature verification), MCP, reconciliation, the PayPal REST client against recorded wire formats, and the Claude provider against a fake Messages API (streaming tool loop, structured outputs, vision, fallbacks).
+- `cd server && npm test`: 43 tests covering the applicant journey, Spanish-language applicants, approvals and the two-person rule, sponsored needs, risk checks, webhooks (including signature verification), MCP, reconciliation, the PayPal REST client against recorded wire formats, and the Claude provider against a fake Messages API (streaming tool loop, structured outputs, vision, fallbacks).
+- `cd app && flutter test`: unit and widget tests for formatting and the chat Markdown renderer. CI runs both suites, `flutter analyze` and the web build on every push.
 - `e2e/journey.mjs` drives the real UI end to end with Playwright: apply in Spanish with a document → Log in with PayPal → submit → reviewer approves → payout → applicant sees *Paid*; donor funds a need → instant grant; console pages.
 - `npm run verify:paypal` and `npm run verify:claude` run live checks against your sandbox app and API key.
 

@@ -8,6 +8,7 @@ import type {
   Payout,
   Review,
 } from "../db/schema.js";
+import { say } from "./i18n.js";
 import type { ApplicationStatus } from "./types.js";
 
 export function maskReceiver(method: string | null, receiver: string | null, paypalEmail?: string | null): string | null {
@@ -24,10 +25,14 @@ export function maskEmail(email: string): string {
   return `${visible}@${domain}`;
 }
 
-export function payoutLabel(app: Pick<Application, "payoutMethod" | "payoutReceiver" | "paypalEmail">): string | null {
+/** Where a grant goes, in plain words (English for staff; pass the applicant's language for their messages). */
+export function payoutLabel(
+  app: Pick<Application, "payoutMethod" | "payoutReceiver" | "paypalEmail">,
+  language: string | null = "en",
+): string | null {
   switch (app.payoutMethod) {
     case "paypal_account":
-      return `your PayPal account${app.paypalEmail ? ` (${maskEmail(app.paypalEmail)})` : ""}`;
+      return `${say(language, "your PayPal account", "su cuenta de PayPal")}${app.paypalEmail ? ` (${maskEmail(app.paypalEmail)})` : ""}`;
     case "paypal_email":
       return `PayPal (${maskEmail(app.payoutReceiver ?? "")})`;
     case "venmo_phone":
@@ -47,13 +52,14 @@ type Step = { key: string; label: string; at: string | null; state: "done" | "cu
 /** Applicant-facing progress timeline. */
 export function timeline(app: Application, payout: Payout | null): Step[] {
   const s = app.status;
+  const l = app.language;
   const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
   const decided = ["approved", "awaiting_funds", "paying", "paid", "unclaimed", "payout_failed"].includes(s);
   const steps: Step[] = [
-    { key: "request", label: "Request written", at: iso(app.createdAt), state: s === "intake" ? "current" : "done" },
+    { key: "request", label: say(l, "Request written", "Solicitud escrita"), at: iso(app.createdAt), state: s === "intake" ? "current" : "done" },
     {
       key: "review",
-      label: s === "needs_info" ? "More information needed" : "Reviewed",
+      label: s === "needs_info" ? say(l, "More information needed", "Falta información") : say(l, "Reviewed", "Revisada"),
       at: iso(app.decidedAt),
       state:
         s === "denied"
@@ -66,7 +72,7 @@ export function timeline(app: Application, payout: Payout | null): Step[] {
     },
     {
       key: "sent",
-      label: s === "awaiting_funds" ? "Waiting for donations" : "Money sent",
+      label: s === "awaiting_funds" ? say(l, "Waiting for donations", "Esperando donaciones") : say(l, "Money sent", "Dinero enviado"),
       at: iso(payout?.sentAt),
       state: ["paid", "unclaimed"].includes(s)
         ? "done"
@@ -78,7 +84,7 @@ export function timeline(app: Application, payout: Payout | null): Step[] {
     },
     {
       key: "received",
-      label: s === "unclaimed" ? "Claim it at PayPal" : "Received",
+      label: s === "unclaimed" ? say(l, "Claim it at PayPal", "Reclámelo en PayPal") : say(l, "Received", "Recibido"),
       at: iso(app.paidAt),
       state: s === "paid" ? "done" : s === "unclaimed" ? "current" : "todo",
     },

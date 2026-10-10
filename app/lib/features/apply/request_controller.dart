@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/api.dart';
 import '../../core/config.dart';
+import '../../core/l10n.dart';
 import '../../core/links.dart';
 import '../../core/models.dart';
 import '../../core/sse.dart';
@@ -44,6 +45,9 @@ class RequestController extends ChangeNotifier {
   bool _recent(ChatMessage m) => m.createdAt != null && DateTime.now().difference(m.createdAt!).inMinutes < 2;
 
   bool get assistantTyping => draftId != null;
+
+  /// Labels follow the language the caseworker detected (English until then).
+  Tr get tr => Tr(view?.language ?? Tr.deviceLanguage());
 
   Future<void> start() async {
     await refresh();

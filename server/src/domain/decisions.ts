@@ -106,7 +106,7 @@ export async function approve(
       kind: "approved",
       amountCents: amount,
       currency: fund.currency,
-      payoutLabel: payoutLabel(app),
+      payoutLabel: payoutLabel(app, app.language),
     })
     .catch(() => `Good news: your request was approved for ${formatMoney(amount, fund.currency)}. We're sending the money now.`);
   await addMessage(s, app.id, "assistant", message, { ui: "approved", amountCents: amount });

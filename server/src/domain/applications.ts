@@ -19,6 +19,7 @@ import { audit } from "./audit.js";
 import { normalizeReceiver } from "./risk.js";
 import type { IntakeFacts, PayoutMethod } from "./types.js";
 import { applicantView, caseSummary } from "./views.js";
+import { say } from "./i18n.js";
 
 export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 export const ALLOWED_DOCUMENT_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
@@ -33,8 +34,12 @@ export function fundContext(fund: Fund): FundContext {
   };
 }
 
-function greeting(fund: Fund): string {
-  return `Hi, I'm the ${fund.name} assistant. In a few words, tell me what happened and what you need help paying for. You can write in any language (puede escribir en español), or tap the mic to talk. What you share is only seen by the fund's volunteer reviewers.`;
+function greeting(fund: Fund, language: string): string {
+  return say(
+    language,
+    `Hi, I'm the ${fund.name} assistant. In a few words, tell me what happened and what you need help paying for. You can write in any language (puede escribir en español), or tap the mic to talk. What you share is only seen by the fund's volunteer reviewers.`,
+    `Hola, soy el asistente de ${fund.name}. En pocas palabras, cuénteme qué pasó y qué necesita pagar. Puede escribir en cualquier idioma o tocar el micrófono para hablar. Lo que comparta solo lo ven las personas voluntarias que revisan las solicitudes.`,
+  );
 }
 
 // ------------------------------------------------------------ loading
@@ -152,7 +157,7 @@ export async function startApplication(
       clientFingerprint: opts.fingerprint ?? null,
     })
     .returning();
-  await addMessage(s, app!.id, "assistant", greeting(fund), { greeting: true });
+  await addMessage(s, app!.id, "assistant", greeting(fund, app!.language), { greeting: true });
   return { application: app!, token };
 }
 
@@ -183,7 +188,7 @@ export async function postApplicantMessage(s: Services, app: Application, conten
       s,
       app.id,
       "event",
-      "Thanks, your message was added to your request. A reviewer will see it.",
+      say(app.language, "Thanks, your message was added to your request. A reviewer will see it.", "Gracias, su mensaje se agregó a su solicitud. La persona que la revisa lo verá."),
       { ui: "notice" },
     );
   }
@@ -277,7 +282,11 @@ export async function runIntakeTurn(s: Services, appId: string): Promise<void> {
       s,
       appId,
       "assistant",
-      "Sorry, I'm having trouble responding right now. You can keep adding details, upload documents, and submit your request below. A volunteer will read everything you wrote.",
+      say(
+        app.language,
+        "Sorry, I'm having trouble responding right now. You can keep adding details, upload documents, and submit your request below. A volunteer will read everything you wrote.",
+        "Perdón, ahora mismo tengo problemas para responder. Puede seguir agregando detalles, subir documentos y enviar su solicitud abajo. Una persona voluntaria leerá todo lo que escribió.",
+      ),
       { degraded: true },
       turnId,
     );
@@ -357,7 +366,7 @@ export async function addDocument(
     sha256: sha256Hex(file.data),
     data: file.data,
   });
-  await addMessage(s, app.id, "event", `Uploaded ${filename}`, { ui: "document", documentId: id, hiddenFromAi: true });
+  await addMessage(s, app.id, "event", say(app.language, `Uploaded ${filename}`, `Archivo subido: ${filename}`), { ui: "document", documentId: id, hiddenFromAi: true });
   await audit(s.db, {
     fundId: app.fundId,
     entityType: "application",
@@ -522,7 +531,11 @@ export async function submitApplication(
     s,
     app.id,
     "event",
-    "Request submitted. Tideover's AI caseworker is preparing it for a volunteer reviewer.",
+    say(
+      app.language,
+      "Request submitted. Tideover's AI caseworker is preparing it for a volunteer reviewer.",
+      "Solicitud enviada. El asistente de Tideover la está preparando para la persona voluntaria que la revisará.",
+    ),
     { ui: "submitted", hiddenFromAi: true },
   );
   s.bus.publish("staff", "case.submitted", caseSummary(updated, fund));
@@ -545,7 +558,7 @@ export async function withdrawApplication(s: Services, app: Application): Promis
     action: "application.withdrawn",
     summary: "Applicant withdrew the request",
   });
-  await addMessage(s, app.id, "event", "You withdrew this request.", { ui: "notice", hiddenFromAi: true });
+  await addMessage(s, app.id, "event", say(app.language, "You withdrew this request.", "Usted retiró esta solicitud."), { ui: "notice", hiddenFromAi: true });
   await publishApplication(s, app.id);
 }
 

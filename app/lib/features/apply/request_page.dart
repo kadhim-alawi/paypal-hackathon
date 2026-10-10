@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api.dart';
 import '../../core/app_scope.dart';
 import '../../core/format.dart';
+import '../../core/l10n.dart';
 import '../../core/models.dart';
 import '../../theme.dart';
 import '../../widgets/ui.dart';
@@ -50,11 +51,18 @@ class _RequestPageState extends State<RequestPage> {
     c.start().then((_) {
       if (!mounted) return;
       final r = widget.paypalResult;
+      final tr = c.tr;
       if (r == 'connected') {
-        showSnack(context, 'PayPal connected. Your money can arrive in minutes once approved.');
+        showSnack(context, tr('PayPal connected. Your money can arrive in minutes once approved.', 'PayPal conectado. Si se aprueba, el dinero puede llegar en minutos.'));
         if (c.view?.isIntake == true) ReviewSheet.show(context, c);
       } else if (r == 'cancelled' || r == 'error') {
-        showSnack(context, r == 'error' ? 'We couldn\'t connect PayPal. Please try again.' : 'PayPal connection cancelled.', error: r == 'error');
+        showSnack(
+          context,
+          r == 'error'
+              ? tr('We couldn\'t connect PayPal. Please try again.', 'No pudimos conectar PayPal. Inténtelo de nuevo.')
+              : tr('PayPal connection cancelled.', 'Se canceló la conexión con PayPal.'),
+          error: r == 'error',
+        );
       }
     });
   }
@@ -82,19 +90,20 @@ class _RequestPageState extends State<RequestPage> {
 
   Future<void> _attach() async {
     final c = _c!;
+    final tr = c.tr;
     final choice = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           ListTile(
             leading: const Icon(Icons.photo_camera_outlined),
-            title: const Text('Take a photo'),
-            subtitle: const Text('Bills, estimates and notices work well'),
+            title: Text(tr('Take a photo', 'Tomar una foto')),
+            subtitle: Text(tr('Bills, estimates and notices work well', 'Sirven facturas, presupuestos y avisos')),
             onTap: () => Navigator.pop(ctx, 'camera'),
           ),
           ListTile(
             leading: const Icon(Icons.upload_file_rounded),
-            title: const Text('Choose a photo or PDF'),
+            title: Text(tr('Choose a photo or PDF', 'Elegir una foto o PDF')),
             onTap: () => Navigator.pop(ctx, 'file'),
           ),
           const SizedBox(height: 8),
@@ -109,7 +118,7 @@ class _RequestPageState extends State<RequestPage> {
     } on ApiException catch (e) {
       if (mounted) showSnack(context, e.message, error: true);
     } catch (e) {
-      if (mounted) showSnack(context, 'Couldn\'t add that file: $e', error: true);
+      if (mounted) showSnack(context, tr('Couldn\'t add that file: $e', 'No se pudo agregar ese archivo: $e'), error: true);
     }
   }
 
@@ -125,11 +134,12 @@ class _RequestPageState extends State<RequestPage> {
           return Scaffold(
             appBar: AppBar(),
             body: c.error == null
-                ? const LoadingView(label: 'Opening your request…')
+                ? LoadingView(label: Tr(Tr.deviceLanguage())('Opening your request…', 'Abriendo su solicitud…'))
                 : (RequestController.isAuthError(c.error) ? const _NoAccess(embedded: true) : ErrorView(error: c.error!, onRetry: c.refresh)),
           );
         }
         final wide = MediaQuery.sizeOf(context).width > 1040;
+        final tr = c.tr;
         final chat = _ChatColumn(controller: c, scroll: _scroll, onAttach: _attach, showHeader: !wide);
         return Scaffold(
           appBar: AppBar(
@@ -139,22 +149,24 @@ class _RequestPageState extends State<RequestPage> {
               Text(v.publicRef),
             ]),
             actions: [
-              Padding(padding: const EdgeInsets.only(right: 4), child: StatusPill(v.status)),
+              Padding(padding: const EdgeInsets.only(right: 4), child: StatusPill(v.status, tr: tr)),
               PopupMenuButton<String>(
                 onSelected: (k) async {
                   if (k == 'link') {
                     final url = '${Uri.base.origin}/r/${v.id}?t=${c.token}';
                     await Clipboard.setData(ClipboardData(text: url));
-                    if (context.mounted) showSnack(context, 'Private link copied. Anyone with it can see this request.');
+                    if (context.mounted) {
+                      showSnack(context, tr('Private link copied. Anyone with it can see this request.', 'Enlace privado copiado. Cualquiera que lo tenga puede ver esta solicitud.'));
+                    }
                   } else if (k == 'withdraw') {
                     final ok = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        title: const Text('Withdraw this request?'),
-                        content: const Text('The fund will stop reviewing it. You can start a new one later.'),
+                        title: Text(tr('Withdraw this request?', '¿Retirar esta solicitud?')),
+                        content: Text(tr('The fund will stop reviewing it. You can start a new one later.', 'El fondo dejará de revisarla. Puede empezar otra más adelante.')),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep it')),
-                          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Withdraw')),
+                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Keep it', 'Mantenerla'))),
+                          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Withdraw', 'Retirar'))),
                         ],
                       ),
                     );
@@ -162,9 +174,9 @@ class _RequestPageState extends State<RequestPage> {
                   }
                 },
                 itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'link', child: Text('Copy private link')),
+                  PopupMenuItem(value: 'link', child: Text(tr('Copy private link', 'Copiar enlace privado'))),
                   if (!const ['paid', 'paying', 'denied', 'withdrawn', 'unclaimed'].contains(v.status))
-                    const PopupMenuItem(value: 'withdraw', child: Text('Withdraw request')),
+                    PopupMenuItem(value: 'withdraw', child: Text(tr('Withdraw request', 'Retirar solicitud'))),
                 ],
               ),
             ],
@@ -196,23 +208,24 @@ class _ChatColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = controller;
     final v = c.view!;
+    final tr = c.tr;
     final msgs = c.messages;
     final docThumb = {for (final d in v.documents) d.id: d.isImage ? c.documentUrl(d.id) : null};
     final items = <Widget>[
       for (final m in msgs)
         m.role == 'event'
-            ? EventItem(message: m, thumbnailUrl: docThumb[m.meta['documentId']])
-            : ChatBubble(message: m),
-      if (c.assistantTyping) ChatBubble(message: ChatMessage(id: 'draft', role: 'assistant', content: c.draftText), streaming: true),
+            ? EventItem(message: m, thumbnailUrl: docThumb[m.meta['documentId']], tr: tr)
+            : ChatBubble(message: m, tr: tr),
+      if (c.assistantTyping) ChatBubble(message: ChatMessage(id: 'draft', role: 'assistant', content: c.draftText), streaming: true, tr: tr),
       if (c.uploading)
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Center(child: Pill('Uploading…', color: T.muted, icon: Icons.cloud_upload_outlined)),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Center(child: Pill(tr('Uploading…', 'Subiendo…'), color: T.muted, icon: Icons.cloud_upload_outlined)),
         ),
     ];
     return Column(children: [
       if (showHeader && !v.isIntake)
-        Padding(padding: const EdgeInsets.fromLTRB(12, 4, 12, 4), child: StatusCard(view: v, compact: true)),
+        Padding(padding: const EdgeInsets.fromLTRB(12, 4, 12, 4), child: StatusCard(view: v, compact: true, tr: tr)),
       Expanded(
         child: ListView(
           controller: scroll,
@@ -220,14 +233,15 @@ class _ChatColumn extends StatelessWidget {
           children: items,
         ),
       ),
-      if (v.documentRequest != null && !c.uploading) _UploadPrompt(request: v.documentRequest!, onAttach: onAttach),
+      if (v.documentRequest != null && !c.uploading) _UploadPrompt(request: v.documentRequest!, onAttach: onAttach, tr: tr),
       if (v.isIntake && v.readyToSubmit) _ReadyBar(controller: c),
       if (v.status == 'approved' && v.payoutMethod == null) _PayoutNeeded(controller: c),
       if (v.status == 'payout_failed') _PayoutNeeded(controller: c, failed: true),
       Composer(
         enabled: v.acceptsMessages,
         busy: c.sending,
-        hint: v.acceptsMessages ? null : 'This request is closed',
+        hint: v.acceptsMessages ? null : tr('This request is closed', 'Esta solicitud está cerrada'),
+        tr: tr,
         onAttach: onAttach,
         onSend: (text) => c.send(text),
       ),
@@ -236,9 +250,10 @@ class _ChatColumn extends StatelessWidget {
 }
 
 class _UploadPrompt extends StatelessWidget {
-  const _UploadPrompt({required this.request, required this.onAttach});
+  const _UploadPrompt({required this.request, required this.onAttach, required this.tr});
   final Map<String, dynamic> request;
   final VoidCallback onAttach;
+  final Tr tr;
 
   @override
   Widget build(BuildContext context) {
@@ -252,8 +267,8 @@ class _UploadPrompt extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Add your ${request['kind']}', style: t.titleSmall),
-            Text('A phone photo is fine. Our AI reads it for the reviewer.', style: t.bodySmall),
+            Text(tr('Add your ${request['kind']}', 'Agregue: ${request['kind']}'), style: t.titleSmall),
+            Text(tr('A phone photo is fine. Our AI reads it for the reviewer.', 'Una foto con el celular sirve. Nuestra IA la lee para quien revisa.'), style: t.bodySmall),
           ]),
         ),
         const SizedBox(width: 8),
@@ -261,7 +276,7 @@ class _UploadPrompt extends StatelessWidget {
           style: FilledButton.styleFrom(minimumSize: const Size(0, 42)),
           onPressed: onAttach,
           icon: const Icon(Icons.photo_camera_outlined, size: 18),
-          label: const Text('Add'),
+          label: Text(tr('Add', 'Agregar')),
         ),
       ]),
     );
@@ -276,6 +291,7 @@ class _ReadyBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final v = controller.view!;
+    final tr = controller.tr;
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
       padding: const EdgeInsets.all(14),
@@ -285,7 +301,7 @@ class _ReadyBar extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Your request is ready', style: t.titleSmall?.copyWith(color: Colors.white)),
+            Text(tr('Your request is ready', 'Su solicitud está lista'), style: t.titleSmall?.copyWith(color: Colors.white)),
             Text(
               [
                 if (v.categoryLabel != null) v.categoryLabel!,
@@ -298,7 +314,7 @@ class _ReadyBar extends StatelessWidget {
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: T.tealDark, minimumSize: const Size(0, 42)),
           onPressed: () => ReviewSheet.show(context, controller),
-          child: const Text('Review & submit'),
+          child: Text(tr('Review & submit', 'Revisar y enviar')),
         ),
       ]),
     );
@@ -318,7 +334,12 @@ class _PayoutNeeded extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(color: failed ? T.dangerSoft : T.tealSoft, borderRadius: T.r16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(failed ? 'PayPal couldn\'t deliver the money' : 'Approved! Where should we send it?', style: t.titleSmall),
+        Text(
+          failed
+              ? controller.tr('PayPal couldn\'t deliver the money', 'PayPal no pudo entregar el dinero')
+              : controller.tr('Approved! Where should we send it?', '¡Aprobada! ¿Adónde lo enviamos?'),
+          style: t.titleSmall,
+        ),
         const SizedBox(height: 10),
         PayoutPicker(controller: controller),
       ]),
@@ -328,9 +349,10 @@ class _PayoutNeeded extends StatelessWidget {
 
 /// Compact progress summary (top of the chat on phones, side panel on desktop).
 class StatusCard extends StatelessWidget {
-  const StatusCard({super.key, required this.view, this.compact = false});
+  const StatusCard({super.key, required this.view, this.compact = false, this.tr = Tr.en});
   final RequestView view;
   final bool compact;
+  final Tr tr;
 
   @override
   Widget build(BuildContext context) {
@@ -349,14 +371,23 @@ class StatusCard extends StatelessWidget {
             const Icon(Icons.verified_rounded, color: Colors.white, size: 28),
             const SizedBox(width: 10),
             Expanded(
-              child: Text('${moneySmart(view.amountApprovedCents)} sent', style: t.headlineSmall?.copyWith(color: Colors.white)),
+              child: Text(tr('${moneySmart(view.amountApprovedCents)} sent', '${moneySmart(view.amountApprovedCents)} enviados'),
+                  style: t.headlineSmall?.copyWith(color: Colors.white)),
             ),
             if (view.minutesToCash != null)
-              Pill('${minutesLabel(view.minutesToCash)} after you asked', color: Colors.white, background: Colors.white24, dense: true),
+              Pill(
+                tr('${minutesLabel(view.minutesToCash)} after you asked', 'en ${minutesLabel(view.minutesToCash, es: true)}'),
+                color: Colors.white,
+                background: Colors.white24,
+                dense: true,
+              ),
           ]),
           const SizedBox(height: 4),
           if (!compact)
-            Text(view.payoutDisplay == null ? 'Delivered by PayPal.' : 'Delivered by PayPal to ${view.payoutDisplay}.',
+            Text(
+                view.payoutDisplay == null
+                    ? tr('Delivered by PayPal.', 'Entregado por PayPal.')
+                    : tr('Delivered by PayPal to ${view.payoutDisplay}.', 'Entregado por PayPal a ${view.payoutDisplay}.'),
                 style: t.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9))),
           SizedBox(height: compact ? 10 : 14),
         ],
@@ -409,19 +440,23 @@ class _SidePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final v = controller.view!;
+    final tr = controller.tr;
+    final notSet = tr('Not set yet', 'Aún no');
     return ListView(padding: const EdgeInsets.all(20), children: [
-      StatusCard(view: v),
+      StatusCard(view: v, tr: tr),
       const SizedBox(height: 20),
-      Text('Your request', style: t.titleSmall),
+      Text(tr('Your request', 'Su solicitud'), style: t.titleSmall),
       const SizedBox(height: 8),
-      _kv(t, 'For', v.categoryLabel ?? 'Not set yet'),
-      _kv(t, 'Amount', v.amountRequestedCents == null ? 'Not set yet' : moneySmart(v.amountRequestedCents)),
-      if (v.amountApprovedCents != null) _kv(t, 'Approved', moneySmart(v.amountApprovedCents)),
-      if (v.location != null) _kv(t, 'Location', v.location!),
+      _kv(t, tr('For', 'Para'), v.categoryLabel ?? notSet),
+      _kv(t, tr('Amount', 'Monto'), v.amountRequestedCents == null ? notSet : moneySmart(v.amountRequestedCents)),
+      if (v.amountApprovedCents != null) _kv(t, tr('Approved', 'Aprobado'), moneySmart(v.amountApprovedCents)),
+      if (v.location != null) _kv(t, tr('Location', 'Ubicación'), v.location!),
       const SizedBox(height: 16),
-      Text('Documents', style: t.titleSmall),
+      Text(tr('Documents', 'Documentos'), style: t.titleSmall),
       const SizedBox(height: 8),
-      if (v.documents.isEmpty) Text('None yet. Use the photo button to add a bill or estimate.', style: t.bodySmall),
+      if (v.documents.isEmpty)
+        Text(tr('None yet. Use the photo button to add a bill or estimate.', 'Ninguno todavía. Use el botón de foto para agregar una factura o presupuesto.'),
+            style: t.bodySmall),
       for (final d in v.documents)
         ListTile(
           contentPadding: EdgeInsets.zero,
@@ -432,18 +467,22 @@ class _SidePanel extends StatelessWidget {
                 : Container(width: 40, height: 48, color: T.paperDeep, child: const Icon(Icons.picture_as_pdf_outlined)),
           ),
           title: Text(d.filename, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.bodyMedium),
-          subtitle: Text(d.status == 'processing' ? 'Reading…' : (d.summary ?? ''), maxLines: 2, overflow: TextOverflow.ellipsis),
+          subtitle: Text(d.status == 'processing' ? tr('Reading…', 'Leyendo…') : (d.summary ?? ''), maxLines: 2, overflow: TextOverflow.ellipsis),
         ),
       const SizedBox(height: 16),
-      Text('Payout', style: t.titleSmall),
+      Text(tr('Payout', 'Pago'), style: t.titleSmall),
       const SizedBox(height: 8),
       PayoutPicker(controller: controller),
       const SizedBox(height: 24),
-      Text('What happens next', style: t.titleSmall),
+      Text(tr('What happens next', 'Qué sigue'), style: t.titleSmall),
       const SizedBox(height: 8),
       Text(
-        'Tideover\'s AI caseworker prepares your request for a volunteer reviewer, who makes the decision. '
-        'If approved, PayPal sends the money right away. You\'ll see every update here.',
+        tr(
+          'Tideover\'s AI caseworker prepares your request for a volunteer reviewer, who makes the decision. '
+              'If approved, PayPal sends the money right away. You\'ll see every update here.',
+          'El asistente de Tideover prepara su solicitud para una persona voluntaria, que toma la decisión. '
+              'Si se aprueba, PayPal envía el dinero enseguida. Aquí verá cada novedad.',
+        ),
         style: t.bodySmall?.copyWith(color: T.inkSoft),
       ),
     ]);
@@ -464,11 +503,13 @@ class _NoAccess extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tr = Tr(Tr.deviceLanguage());
     final body = EmptyState(
       icon: Icons.lock_outline_rounded,
-      title: 'This request is private',
-      message: 'It can only be opened on the device that started it, or with its private link.',
-      action: FilledButton(onPressed: () => context.go('/'), child: const Text('Go to Tideover')),
+      title: tr('This request is private', 'Esta solicitud es privada'),
+      message: tr('It can only be opened on the device that started it, or with its private link.',
+          'Solo se puede abrir en el dispositivo donde se empezó o con su enlace privado.'),
+      action: FilledButton(onPressed: () => context.go('/'), child: Text(tr('Go to Tideover', 'Ir a Tideover'))),
     );
     return embedded ? body : Scaffold(appBar: AppBar(), body: Center(child: body));
   }

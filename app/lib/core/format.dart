@@ -32,13 +32,13 @@ String timeAgo(DateTime? t, {DateTime? now}) {
   return DateFormat.MMMd(_locale).format(t);
 }
 
-String minutesLabel(num? minutes) {
+String minutesLabel(num? minutes, {bool es = false}) {
   if (minutes == null) return '—';
   if (minutes < 1) return '< 1 min';
   if (minutes < 90) return '${minutes.round()} min';
   final h = minutes / 60;
   if (h < 36) return '${h.toStringAsFixed(h < 10 ? 1 : 0)} h';
-  return '${(h / 24).toStringAsFixed(1)} days';
+  return '${(h / 24).toStringAsFixed(1)} ${es ? 'días' : 'days'}';
 }
 
 String clock(DateTime? t) => t == null ? '' : DateFormat.jm(_locale).format(t);

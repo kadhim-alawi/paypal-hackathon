@@ -26,7 +26,7 @@ Then we read GiveDirectly's hurricane numbers: their earlier U.S. process took s
 
 Tideover is the operating system for a community emergency fund, with three sides:
 
-**People in need** chat with an AI caseworker (Claude) in their own language, by text or voice. It asks only what the fund's policy needs, reads a photo or PDF of the bill or estimate on the spot, and checks it against the story. They verify their payout account with **Log in with PayPal** (or use Venmo or a PayPal email) and follow their request live. No account, no SSN, no forms.
+**People in need** chat with an AI caseworker (Claude) in their own language, by text or voice, and the app's screens follow them into Spanish. It asks only what the fund's policy needs, reads a photo or PDF of the bill or estimate on the spot, and checks it against the story. They verify their payout account with **Log in with PayPal** (or use Venmo or a PayPal email) and follow their request live. No account, no SSN, no forms.
 
 **Volunteers and organizers** get a case file instead of a pile of paperwork: a summary, a recommended amount, a confidence score, and every rule of the fund's own policy checked with quoted evidence. Deterministic checks the AI cannot override catch duplicates, reused documents, near-identical stories, cooldowns, velocity, caps and amount mismatches. One tap approves and sends the grant through **PayPal Payouts**. Grants over a threshold need two different reviewers. Organizers write their policy in plain English and Claude compiles it into the structured rubric the whole system enforces. A treasurer copilot, built with the **PayPal Agent Toolkit**, answers questions from live data and reconciles the books against PayPal in both directions. Every AI output, human decision and PayPal event lands in an append-only audit log.
 
@@ -66,7 +66,7 @@ The rules ask every submission to name its AI tools and explain how they're used
 
 - The full journey works end to end: a Spanish-speaking applicant with a document and a verified PayPal account, reviewer approval, a PayPal payout, and the applicant seeing "money sent", verified in a real browser with Playwright.
 - A donor funding a specific approved need and watching it pay out instantly.
-- 40 automated tests across the applicant flow, approvals and the two-person rule, risk checks, webhooks, MCP, reconciliation, and contract tests for both the PayPal REST client and the Claude provider.
+- 43 server tests plus Flutter tests, run in CI on every push, across the applicant flow (including Spanish-speaking applicants), approvals and the two-person rule, risk checks, webhooks, MCP, reconciliation, and contract tests for both the PayPal REST client and the Claude provider.
 - It works for real today: one `render.yaml`, and any community fund can run it.
 
 ## What we learned
@@ -96,7 +96,7 @@ The rules ask every submission to name its AI tools and explain how they're used
 
 The five criteria are weighted equally; ties are broken in this order.
 
-- **Technological Implementation:** Seven PayPal capabilities used for what they're for: Payouts (PayPal, Venmo, verified payer IDs), Orders v2 with the JS SDK, Log in with PayPal, verified webhooks, refunds, Transaction Search, and the Agent Toolkit. Claude in seven roles (intake agent, document vision, structured assessment, policy compiler, copilot, multilingual messages and stories, MCP donor agent). Idempotent money movement with a per-fund lock and an append-only ledger. 40 automated tests, Playwright end-to-end runs, and live `verify:paypal` / `verify:claude` scripts.
+- **Technological Implementation:** Seven PayPal capabilities used for what they're for: Payouts (PayPal, Venmo, verified payer IDs), Orders v2 with the JS SDK, Log in with PayPal, verified webhooks, refunds, Transaction Search, and the Agent Toolkit. Claude in seven roles (intake agent, document vision, structured assessment, policy compiler, copilot, multilingual messages and stories, MCP donor agent). Idempotent money movement with a per-fund lock and an append-only ledger. 52 automated tests in CI, Playwright end-to-end runs, and live `verify:paypal` / `verify:claude` scripts.
 - **Design:** One coherent product for three audiences (applicant, reviewer/treasurer, donor), mobile-first, multilingual, realtime, with plain-language status at every step and accessible semantics. It runs in production today from one Render blueprint.
 - **Potential Impact:** It's built for a specific, documented gap: 37% of U.S. adults can't cover $400, and the community funds that help them run on spreadsheets and personal Venmo accounts. The demo shows the full path from request to cash in minutes with human approval and fraud checks. It's open source and ready for any mutual aid group or campus fund.
 - **Innovation/Idea:** An AI caseworker that doesn't decide; a compiled, enforceable policy instead of prompt rules; donors (and their AI agents over MCP) funding a specific, verified need that pays out the moment the payment captures.

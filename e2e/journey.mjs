@@ -36,8 +36,10 @@ const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, 
 const app = await phone.newPage();
 app.on("pageerror", (e) => console.log("pageerror(app):", e.message));
 await open(app, "/f/eastside/apply");
+await button(app, "Español").click(); // a Spanish-speaking applicant
+await sleep(500);
 await snap(app, "apply-start");
-await button(app, "Start my request").click();
+await button(app, "Comenzar mi solicitud").click();
 await app.waitForURL(/\/r\/app_/, { timeout: 15000 });
 await sleep(2500);
 await enableA11y(app);
@@ -52,24 +54,24 @@ const typeAndSend = async (text) => {
   await app.keyboard.press("Enter");
   await sleep(3500);
 };
-await typeAndSend("Hola. My car broke down and I need $380 to fix the brakes so I can get to work at the warehouse. I live in 78741 and need it this week.");
+await typeAndSend("Hola. Se me descompuso el carro y necesito $380 para arreglar los frenos y poder llegar a mi trabajo en el almacén. Vivo en el 78741 y lo necesito esta semana.");
 await snap(app, "chat-first-reply");
 
 // Upload the repair estimate.
-await button(app, "Add").click().catch(async () => button(app, "Add a photo or document").click());
+await button(app, "Agregar").click().catch(async () => button(app, "Agregar una foto o documento").click());
 await sleep(800);
 const chooserPromise = app.waitForEvent("filechooser", { timeout: 10000 });
-await app.getByText("Choose a photo or PDF").click();
+await app.getByText("Elegir una foto o PDF").click();
 const chooser = await chooserPromise;
 await chooser.setFiles(estimate);
 await sleep(5000);
 await snap(app, "chat-document-read");
 
 // Review & submit → Connect PayPal (simulated Log in with PayPal).
-await button(app, "Review & submit").click();
+await button(app, "Revisar y enviar").click();
 await sleep(1500);
 await snap(app, "review-sheet");
-await button(app, "Connect PayPal").click();
+await button(app, "Conectar PayPal").click();
 await app.waitForURL(/\/sim\/paypal\/login/, { timeout: 15000 });
 await sleep(500);
 await snap(app, "paypal-login-sim");
@@ -78,7 +80,7 @@ await app.waitForURL(/paypal=connected/, { timeout: 15000 });
 await sleep(3500);
 await enableA11y(app);
 await snap(app, "paypal-connected-review");
-await button(app, "Submit request").click();
+await button(app, "Enviar solicitud").click();
 await sleep(4000);
 await snap(app, "submitted");
 const requestUrl = app.url().split("?")[0];

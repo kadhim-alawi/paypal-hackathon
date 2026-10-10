@@ -144,7 +144,7 @@ const INTAKE_TOOLS: BetaToolUnion[] = [
       type: "object",
       additionalProperties: false,
       properties: {
-        document_kind: { type: "string", description: "e.g. 'repair estimate', 'shut-off notice'" },
+        document_kind: { type: "string", description: "Short name of the document in the applicant's language, shown on their upload button, e.g. 'repair estimate' or 'presupuesto de reparación'." },
         reason: { type: "string", description: "Short reason shown to the applicant, in their language." },
       },
       required: ["document_kind", "reason"],

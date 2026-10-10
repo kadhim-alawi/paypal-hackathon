@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/api.dart';
 import '../../core/app_scope.dart';
+import '../../core/l10n.dart';
 import '../../theme.dart';
 import '../../widgets/site.dart';
 import '../../widgets/ui.dart';
@@ -19,6 +20,7 @@ class ApplyStartPage extends StatefulWidget {
 class _ApplyStartPageState extends State<ApplyStartPage> {
   bool _busy = false;
   String? _error;
+  String _lang = Tr.deviceLanguage();
 
   Future<void> _start() async {
     setState(() {
@@ -27,8 +29,7 @@ class _ApplyStartPageState extends State<ApplyStartPage> {
     });
     final services = AppScope.of(context);
     try {
-      final locale = Localizations.maybeLocaleOf(context)?.languageCode;
-      final res = await services.api.post('/api/funds/${widget.slug}/applications', body: {'language': locale}) as Map<String, dynamic>;
+      final res = await services.api.post('/api/funds/${widget.slug}/applications', body: {'language': _lang}) as Map<String, dynamic>;
       final id = res['id'] as String;
       await services.storage.saveApplicantToken(id, res['token'] as String);
       if (mounted) context.go('/r/$id');
@@ -42,6 +43,7 @@ class _ApplyStartPageState extends State<ApplyStartPage> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    final tr = Tr(_lang);
     final mine = AppScope.of(context).storage.myRequests();
     return Scaffold(
       appBar: const SiteHeader(),
@@ -49,21 +51,43 @@ class _ApplyStartPageState extends State<ApplyStartPage> {
         MaxWidth(
           width: 620,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Let\'s get you help.', style: t.displaySmall),
+            Align(
+              alignment: Alignment.centerRight,
+              child: SegmentedButton<String>(
+                showSelectedIcon: false,
+                style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                segments: const [
+                  ButtonSegment(value: 'en', label: Text('English')),
+                  ButtonSegment(value: 'es', label: Text('Español')),
+                ],
+                selected: {_lang},
+                onSelectionChanged: (v) => setState(() => _lang = v.first),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(tr('Let\'s get you help.', 'Vamos a ayudarle.'), style: t.displaySmall),
             const SizedBox(height: 12),
             Text(
-              'You\'ll chat with an assistant for a few minutes, in any language. It will ask what happened, how much you need, '
-              'and for a photo of a bill if you have one. A volunteer from the fund reviews every request.',
+              tr(
+                'You\'ll chat with an assistant for a few minutes, in any language. It will ask what happened, how much you need, '
+                    'and for a photo of a bill if you have one. A volunteer from the fund reviews every request.',
+                'Va a conversar unos minutos con un asistente, en cualquier idioma. Le preguntará qué pasó, cuánto necesita '
+                    'y, si la tiene, una foto de la factura. Una persona voluntaria del fondo revisa cada solicitud.',
+              ),
               style: t.bodyLarge?.copyWith(color: T.inkSoft),
             ),
             const SizedBox(height: 22),
             SectionCard(
               color: T.tealSoft,
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                _point(t, Icons.lock_outline_rounded, 'Private', 'Only the fund\'s reviewers see your details. Nothing is posted with your name.'),
-                _point(t, Icons.translate_rounded, 'Any language', 'Write or speak in the language you\'re most comfortable with.'),
-                _point(t, Icons.bolt_rounded, 'Fast', 'If approved, money is sent to your PayPal or Venmo, usually within the hour.'),
-                _point(t, Icons.no_accounts_outlined, 'No account needed', 'We\'ll never ask for your Social Security number or bank details.'),
+                _point(t, Icons.lock_outline_rounded, tr('Private', 'Privado'),
+                    tr('Only the fund\'s reviewers see your details. Nothing is posted with your name.', 'Solo quienes revisan en el fondo ven sus datos. Nada se publica con su nombre.')),
+                _point(t, Icons.translate_rounded, tr('Any language', 'Cualquier idioma'),
+                    tr('Write or speak in the language you\'re most comfortable with.', 'Escriba o hable en el idioma en que se sienta más cómodo.')),
+                _point(t, Icons.bolt_rounded, tr('Fast', 'Rápido'),
+                    tr('If approved, money is sent to your PayPal or Venmo, usually within the hour.', 'Si se aprueba, el dinero se envía a su PayPal o Venmo, normalmente en menos de una hora.')),
+                _point(t, Icons.no_accounts_outlined, tr('No account needed', 'Sin crear cuenta'),
+                    tr('We\'ll never ask for your Social Security number or bank details.', 'Nunca le pediremos su número de Seguro Social ni datos bancarios.')),
               ]),
             ),
             const SizedBox(height: 22),
@@ -76,23 +100,25 @@ class _ApplyStartPageState extends State<ApplyStartPage> {
               icon: _busy
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
                   : const Icon(Icons.chat_bubble_outline_rounded),
-              label: const Text('Start my request'),
+              label: Text(tr('Start my request', 'Comenzar mi solicitud')),
             ),
             if (mine.isNotEmpty) ...[
               const SizedBox(height: 28),
-              Text('Your requests on this device', style: t.titleSmall),
+              Text(tr('Your requests on this device', 'Sus solicitudes en este dispositivo'), style: t.titleSmall),
               const SizedBox(height: 8),
               for (final id in mine.take(3))
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.history_rounded),
-                  title: Text('Open request ${id.substring(id.length - 6).toUpperCase()}'),
+                  title: Text('${tr('Open request', 'Abrir solicitud')} ${id.substring(id.length - 6).toUpperCase()}'),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.go('/r/$id'),
                 ),
             ],
             const SizedBox(height: 28),
-            Text('In danger or thinking about harming yourself? Call or text 988, or 911 in an emergency.',
+            Text(
+                tr('In danger or thinking about harming yourself? Call or text 988, or 911 in an emergency.',
+                    '¿Está en peligro o piensa en hacerse daño? Llame o envíe un mensaje al 988, o llame al 911 en una emergencia.'),
                 style: t.bodySmall),
           ]),
         ),

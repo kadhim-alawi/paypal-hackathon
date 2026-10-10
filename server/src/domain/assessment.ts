@@ -15,6 +15,7 @@ import { audit } from "./audit.js";
 import { computeRiskFlags } from "./risk.js";
 import type { Assessment, RiskFlag } from "./types.js";
 import { caseSummary } from "./views.js";
+import { say } from "./i18n.js";
 
 /** Queues an assessment. Never awaits the job, so it is safe to call from inside other jobs. */
 export async function requestAssessment(s: Services, appId: string, opts: { reason: string }): Promise<void> {
@@ -206,7 +207,11 @@ export async function runAssessment(s: Services, appId: string, reason: string):
       s,
       app.id,
       "event",
-      "Your request is with a volunteer reviewer now. Most requests are reviewed within a few hours.",
+      say(
+        app.language,
+        "Your request is with a volunteer reviewer now. Most requests are reviewed within a few hours.",
+        "Su solicitud ya está con una persona voluntaria. La mayoría se revisan en unas pocas horas.",
+      ),
       { ui: "in_review", hiddenFromAi: true },
     );
   }

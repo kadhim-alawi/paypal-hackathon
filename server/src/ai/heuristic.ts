@@ -71,7 +71,7 @@ const T = {
     askLocation: "Thank you. What city or ZIP code are you in?",
     askUrgency: "Got it. How soon do you need the money? Is there a due date?",
     askDoc: (kind: string) => `If you have a ${kind}, a photo of it helps the reviewer. You can upload it with the button below, or skip this.`,
-    ready: "Thanks, you're all set. Please review your request below and submit it. A volunteer reviews every request, usually within hours.",
+    ready: "You're all set. Please review your request below and submit it. A volunteer reviews every request, usually within hours.",
     docThanks: "Thank you, I've added that document to your request.",
     outOfScope: "I'm sorry, this fund may not cover that. You can still submit, or call 211 for other local help.",
   },
@@ -81,10 +81,21 @@ const T = {
     askLocation: "Gracias. ¿En qué ciudad o código postal vive?",
     askUrgency: "Entendido. ¿Para cuándo necesita el dinero? ¿Hay una fecha límite?",
     askDoc: (kind: string) => `Si tiene un documento (${kind}), una foto ayuda a quien revisa su solicitud. Puede subirla con el botón de abajo, o saltar este paso.`,
-    ready: "Gracias, ya está todo listo. Revise su solicitud abajo y envíela. Una persona voluntaria revisa cada solicitud, normalmente en unas horas.",
+    ready: "Ya está todo listo. Revise su solicitud abajo y envíela. Una persona voluntaria revisa cada solicitud, normalmente en unas horas.",
     docThanks: "Gracias, agregué ese documento a su solicitud.",
     outOfScope: "Lo siento, es posible que este fondo no cubra eso. Puede enviarla de todos modos o llamar al 211 para otra ayuda local.",
   },
+};
+
+/** Spanish names for common evidence documents (fund rubrics are usually written in English). */
+const EVIDENCE_ES: Record<string, string> = {
+  "repair estimate": "presupuesto de reparación",
+  "repair quote": "presupuesto de reparación",
+  "utility bill or shut-off notice": "factura o aviso de corte de servicio",
+  "rent notice or lease ledger": "aviso de renta o estado de cuenta del alquiler",
+  "rent notice or bill": "aviso de renta o factura",
+  "pharmacy quote or medical bill": "cotización de farmacia o factura médica",
+  "bookstore quote": "cotización de la librería",
 };
 
 async function streamOut(text: string, onDelta: (t: string) => void): Promise<string> {
@@ -152,7 +163,11 @@ export class HeuristicAi implements AiProvider {
       reply = t.outOfScope;
     } else if (ctx.documents.length === 0 && !ctx.history.some((h) => h.role === "event" && h.content.includes("upload button"))) {
       const cat = ctx.fund.rubric.categories.find((c) => c.key === category);
-      const kind = cat?.evidence[0] ?? (lang === "es" ? "factura o presupuesto" : "bill or estimate");
+      const evidence = cat?.evidence[0];
+      const kind =
+        lang === "es"
+          ? (evidence ? (EVIDENCE_ES[evidence.toLowerCase()] ?? evidence) : "factura o presupuesto")
+          : (evidence ?? "bill or estimate");
       await ctx.tools.requestDocument({ document_kind: kind, reason: t.askDoc(kind) });
       reply = t.askDoc(kind);
     } else {

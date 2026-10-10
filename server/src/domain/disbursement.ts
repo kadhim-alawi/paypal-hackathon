@@ -10,6 +10,7 @@ import { audit } from "./audit.js";
 import { availableCents, postLedger } from "./ledger.js";
 import type { PayoutStatus } from "./types.js";
 import { minutesToCash, payoutLabel, payoutView } from "./views.js";
+import { say } from "./i18n.js";
 
 /** PayPal Payouts US domestic fee estimate: 2% (min $0.25, max $20). */
 export const estimatePayoutFee = (cents: number) => Math.min(2000, Math.max(25, Math.round(cents * 0.02)));
@@ -46,7 +47,11 @@ export async function disburse(s: Services, appId: string, opts: { actor: "staff
       s,
       app.id,
       "event",
-      "Approved! Choose how you'd like to receive the money below and we'll send it right away.",
+      say(
+        app.language,
+        "Approved! Choose how you'd like to receive the money below and we'll send it right away.",
+        "¡Aprobada! Elija abajo cómo quiere recibir el dinero y lo enviaremos de inmediato.",
+      ),
       { ui: "need_payout_destination", hiddenFromAi: true },
     );
     await publishApplication(s, app.id);
@@ -220,7 +225,11 @@ async function failPayout(
     s,
     app.id,
     "assistant",
-    "We approved your request, but PayPal couldn't deliver the money to the account you gave us. Please double-check your payout details below, or reply here and our team will help.",
+    say(
+      app.language,
+      "We approved your request, but PayPal couldn't deliver the money to the account you gave us. Please double-check your payout details below, or reply here and our team will help.",
+      "Aprobamos su solicitud, pero PayPal no pudo entregar el dinero a la cuenta que nos dio. Revise sus datos de pago abajo o responda aquí y le ayudaremos.",
+    ),
     { ui: "payout_failed" },
   );
   s.bus.publish("staff", "payout.updated", payoutView(updated!));
@@ -317,7 +326,7 @@ export async function applyPayoutItem(s: Services, payoutId: string, item: Payou
           kind: "paid",
           amountCents: payout.amountCents,
           currency: fund.currency,
-          payoutLabel: payoutLabel(app),
+          payoutLabel: payoutLabel(app, app.language),
         })
         .catch(() => `${formatMoney(payout.amountCents, fund.currency)} has been sent. We hope this helps.`);
       await addMessage(s, app.id, "assistant", text, { ui: "paid", amountCents: payout.amountCents });
@@ -342,7 +351,11 @@ export async function applyPayoutItem(s: Services, payoutId: string, item: Payou
         s,
         app.id,
         "assistant",
-        `We sent ${formatMoney(payout.amountCents, fund.currency)}! PayPal emailed instructions to ${payoutLabel(app) ?? "you"}. To receive it, sign up for a free PayPal account with that same email or phone within 30 days.`,
+        say(
+          app.language,
+          `We sent ${formatMoney(payout.amountCents, fund.currency)}! PayPal emailed instructions to ${payoutLabel(app) ?? "you"}. To receive it, sign up for a free PayPal account with that same email or phone within 30 days.`,
+          `¡Enviamos ${formatMoney(payout.amountCents, fund.currency)}! PayPal envió instrucciones a ${payoutLabel(app, "es") ?? "usted"}. Para recibirlo, cree una cuenta gratuita de PayPal con ese mismo correo o teléfono en un plazo de 30 días.`,
+        ),
         { ui: "unclaimed" },
       );
     }

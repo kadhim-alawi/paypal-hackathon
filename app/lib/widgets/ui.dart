@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/format.dart';
+import '../core/l10n.dart';
 import '../theme.dart';
 
 /// Centers content with a readable max width and the standard side gutter.
@@ -214,14 +215,30 @@ class Pill extends StatelessWidget {
     };
 
 class StatusPill extends StatelessWidget {
-  const StatusPill(this.status, {super.key, this.dense = false});
+  const StatusPill(this.status, {super.key, this.dense = false, this.tr = Tr.en});
   final String status;
   final bool dense;
+  final Tr tr;
+
+  static const _es = {
+    'intake': 'Borrador',
+    'submitted': 'Enviada',
+    'needs_info': 'Falta información',
+    'in_review': 'En revisión',
+    'approved': 'Aprobada',
+    'awaiting_funds': 'Esperando fondos',
+    'paying': 'Enviando',
+    'paid': 'Pagada',
+    'unclaimed': 'Por reclamar',
+    'payout_failed': 'Pago fallido',
+    'denied': 'No aprobada',
+    'withdrawn': 'Retirada',
+  };
 
   @override
   Widget build(BuildContext context) {
     final s = statusStyle(status);
-    return Pill(s.label, color: s.color, icon: s.icon, dense: dense);
+    return Pill(tr.es ? (_es[status] ?? s.label) : s.label, color: s.color, icon: s.icon, dense: dense);
   }
 }
 
