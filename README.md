@@ -1,5 +1,7 @@
 # Tideover
 
+[![CI](https://github.com/kadhim-alawi/paypal-hackathon/actions/workflows/ci.yml/badge.svg)](https://github.com/kadhim-alawi/paypal-hackathon/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-0E7C66.svg)](LICENSE)
+
 **Emergency cash in minutes, not months.**
 
 Tideover is the operating system for community emergency funds: mutual aid groups, campus emergency grants, church and neighborhood relief funds. A neighbor with a shut-off notice talks to an AI caseworker in their own language, snaps a photo of the bill, connects their PayPal or Venmo, and a volunteer approves the grant with one tap. PayPal Payouts delivers the money, and every donor can watch it arrive on a public ledger.

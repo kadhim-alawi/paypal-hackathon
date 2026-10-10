@@ -271,15 +271,17 @@ export class HeuristicAi implements AiProvider {
   async decisionMessage(ctx: DecisionMessageContext): Promise<string> {
     const amount = ctx.amountCents != null ? formatMoney(ctx.amountCents, ctx.currency) : "";
     const es = ctx.language === "es";
+    // payoutLabel is written in English for staff; translate its one English phrase.
+    const to = es ? ctx.payoutLabel?.replace(/^your PayPal account/, "su cuenta de PayPal") : ctx.payoutLabel;
     switch (ctx.kind) {
       case "approved":
         return es
-          ? `¡Buenas noticias! Su solicitud fue aprobada por ${amount}. Estamos enviando el dinero${ctx.payoutLabel ? ` a ${ctx.payoutLabel}` : ""}.`
-          : `Good news: your request was approved for ${amount}. We're sending the money${ctx.payoutLabel ? ` to ${ctx.payoutLabel}` : ""} now.`;
+          ? `¡Buenas noticias! Su solicitud fue aprobada por ${amount}. Estamos enviando el dinero${to ? ` a ${to}` : ""}.`
+          : `Good news: your request was approved for ${amount}. We're sending the money${to ? ` to ${to}` : ""} now.`;
       case "paid":
         return es
-          ? `El dinero (${amount}) ya fue enviado${ctx.payoutLabel ? ` a ${ctx.payoutLabel}` : ""}. Esperamos que esto ayude.`
-          : `${amount} has been sent${ctx.payoutLabel ? ` to ${ctx.payoutLabel}` : ""}. We hope this helps.`;
+          ? `El dinero (${amount}) ya fue enviado${to ? ` a ${to}` : ""}. Esperamos que esto ayude.`
+          : `${amount} has been sent${to ? ` to ${to}` : ""}. We hope this helps.`;
       case "awaiting_funds":
         return es
           ? `Su solicitud fue aprobada por ${amount}. El fondo está esperando nuevas donaciones; le avisaremos en cuanto se envíe el dinero.`
