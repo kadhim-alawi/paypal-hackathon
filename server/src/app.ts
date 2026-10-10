@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+import compress from "@fastify/compress";
 import cors from "@fastify/cors";
 import formbody from "@fastify/formbody";
 import multipart from "@fastify/multipart";
@@ -57,6 +58,7 @@ export async function buildApp(opts: BuildOptions): Promise<{ app: FastifyInstan
     paypal.onWebhook = (event) => handlePayPalWebhook(services, event, true).then(() => undefined);
   }
 
+  await app.register(compress, { global: true, threshold: 1024, encodings: ["br", "gzip"] });
   await app.register(cors, { origin: config.corsOrigins, credentials: false });
   await app.register(formbody);
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1 } });
@@ -98,7 +100,16 @@ export async function buildApp(opts: BuildOptions): Promise<{ app: FastifyInstan
   // Flutter web build (single-page app) served from the same origin.
   const webDir = config.webDir ? resolve(config.webDir) : null;
   if (webDir && existsSync(resolve(webDir, "index.html"))) {
-    await app.register(fastifyStatic, { root: webDir, prefix: "/", wildcard: false, index: ["index.html"] });
+    await app.register(fastifyStatic, {
+      root: webDir,
+      prefix: "/",
+      index: ["index.html"],
+      setHeaders: (res, path) => {
+        // Flutter's bootstrap and entry files must revalidate; everything else is versioned by the build.
+        const revalidate = /(index\.html|flutter_bootstrap\.js|flutter_service_worker\.js|main\.dart\.(js|wasm|mjs)|version\.json|manifest\.json)$/.test(path);
+        res.header("Cache-Control", revalidate ? "no-cache" : "public, max-age=86400");
+      },
+    });
     app.setNotFoundHandler((req, reply) => {
       const path = req.url.split("?")[0]!;
       if (req.method !== "GET" || /^\/(api|mcp|give|sim)(\/|$)/.test(path) || /\.[a-z0-9]{2,5}$/i.test(path)) {

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tideover — emergency cash in minutes</title>
+  <meta name="description" content="Tideover gives community emergency funds an AI caseworker and PayPal rails, so people in crisis get cash in minutes and donors see every dollar.">
+  <meta name="theme-color" content="#0E7C66">
+  <meta property="og:title" content="Tideover — emergency cash in minutes, not months">
+  <meta property="og:description" content="AI prepares, people decide, PayPal delivers. Open-source emergency cash for community funds.">
+  <meta property="og:image" content="icons/Icon-512.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Tideover">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    html, body { margin: 0; height: 100%; background: #F6F4EF; }
+    #splash { position: fixed; inset: 0; display: grid; place-items: center; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #14211D; transition: opacity .3s ease; }
+    #splash .box { text-align: center; }
+    #splash img { width: 64px; height: 64px; border-radius: 18px; animation: bob 1.6s ease-in-out infinite; }
+    #splash p { margin: 14px 0 0; font-weight: 700; letter-spacing: -.01em; }
+    #splash small { display: block; margin-top: 4px; color: #5B6B66; font-weight: 500; }
+    @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  </style>
+</head>
+<body>
+  <div id="splash"><div class="box"><img src="icons/Icon-192.png" alt=""><p>Tideover</p><small>Emergency cash in minutes</small></div></div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var s = document.getElementById('splash');
+      if (s) { s.style.opacity = '0'; setTimeout(function () { s.remove(); }, 350); }
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

@@ -263,7 +263,8 @@ export class HeuristicAi implements AiProvider {
   }
 
   async writeStory(ctx: StoryContext): Promise<string> {
-    const minutes = ctx.minutesToCash != null ? ` in ${Math.max(1, Math.round(ctx.minutesToCash))} minutes` : "";
+    const m = ctx.minutesToCash != null ? Math.max(1, Math.round(ctx.minutesToCash)) : null;
+    const minutes = m != null ? ` in ${m} minute${m === 1 ? "" : "s"}` : "";
     return `A neighbor in ${ctx.region} received ${formatMoney(ctx.amountCents, ctx.currency)} for ${ctx.categoryLabel.toLowerCase()}${minutes}.`;
   }
 

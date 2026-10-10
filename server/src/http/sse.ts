@@ -22,8 +22,10 @@ export async function streamEvents(
     "X-Accel-Buffering": "no",
     "Access-Control-Allow-Origin": request.headers.origin ?? "*",
   });
+  // One unnamed event stream; the type travels inside the payload so browser
+  // EventSource and mobile clients parse it the same way.
   const write = (event: BusEvent) => {
-    res.write(`event: ${event.type}\ndata: ${JSON.stringify({ ...((event.data as object) ?? {}), _at: event.at })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: event.type, data: event.data ?? {}, at: event.at })}\n\n`);
   };
   res.write(`retry: 3000\n\n`);
   if (snapshot) {
