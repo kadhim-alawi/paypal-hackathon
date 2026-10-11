@@ -82,4 +82,13 @@ const rubric = await timed("Policy compiler", () =>
   ai.compilePolicy({ fundName: fund.name, region: fund.region, currency: "USD", policyText: EASTSIDE_POLICY }),
 );
 console.log(JSON.stringify(rubric, null, 2).slice(0, 1500));
+
+// The schema the real Ledger grid sends (AG Grid AI Toolkit: api.getStructuredSchema()).
+const gridSchema = JSON.parse(readFileSync(new URL("../../test/fixtures/ag-grid-ledger-schema.json", import.meta.url), "utf8"));
+const grid = await timed("Ask the ledger (AG Grid AI Toolkit schema → structured output)", () =>
+  ai.gridQuery({ question: "Total grants by category this month", schema: gridSchema, state: {}, today: new Date().toISOString().slice(0, 10) }),
+);
+console.log(grid.explanation);
+console.log(JSON.stringify(grid.gridState, null, 2).slice(0, 1500));
+if (!grid.gridState.rowGroup) throw new Error("Expected the ledger answer to group rows (rowGroup missing).");
 console.log("\nClaude integration works.");
