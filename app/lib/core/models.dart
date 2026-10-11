@@ -23,6 +23,7 @@ class AppInfo {
   String get publicUrl => _str(raw['publicUrl']) ?? '';
   bool get simulated => paypalMode == 'simulated';
   bool get demoLogins => raw['demoLogins'] == true;
+  String? get agGridLicenseKey => _str(raw['agGridLicenseKey']);
 }
 
 class FundCategory {

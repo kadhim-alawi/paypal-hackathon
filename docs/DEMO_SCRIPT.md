@@ -24,7 +24,7 @@ The rules ask for a video **under 3 minutes**, **public on YouTube**, showing th
 | **1:30–1:42** | Split screen: the phone flips to **Money sent**, and Maria's sandbox PayPal shows +$380. | "PayPal Payouts sends it. Four minutes after Maria asked, the money is in her account." |
 | **1:42–2:05** | Riverside fund page: an approved need waiting for funds → **Fund this** → PayPal checkout (show the Venmo button) → thanks page ticks to "Delivered to your neighbor". | "When a fund runs short, approved needs show up publicly. A donor pays with PayPal or Venmo, and the grant goes out the moment the payment captures. Donors see exactly where their money went." |
 | **2:05–2:25** | Terminal: `npm run agent -- "Find an approved need and give $25"`. The agent lists the tools, calls `find_needs` and `create_donation`, and prints the PayPal link; open it and approve in the sandbox. | "Tideover also speaks MCP, so an AI agent can find a real, verified need and give. It hands back a PayPal checkout, and nothing moves until a person approves it." |
-| **2:25–2:42** | Console Copilot: "Reconcile us with PayPal for the last 7 days." Tool chips show the PayPal Agent Toolkit. Quick cut to the Audit log. | "Treasurers get a copilot that reads live PayPal data through the PayPal Agent Toolkit and reconciles the books in both directions. Every AI output, decision and PayPal event is in an append-only audit log." |
+| **2:25–2:42** | Console **Ledger** (AG Grid): every movement with PayPal IDs. Type "total grants by category this month" and the grid regroups with totals; tap Excel. One-second cut to the Copilot's PayPal Agent Toolkit chips and the Audit log. | "Treasurers get the spreadsheet they already live in, but live and tied to PayPal. Ask it in plain English: Claude answers through AG Grid's AI Toolkit, and the grid does the math. A copilot reconciles with PayPal, and every action is in an audit log." |
 | **2:42–2:52** | Home page hero, then the logo. Text on screen: *AI proposes · people decide · rules enforce*. | "Tideover: emergency cash in minutes, not months. Open source, and ready for any community fund today." |
 
 ## Shot list checklist
@@ -35,6 +35,7 @@ The rules ask for a video **under 3 minutes**, **public on YouTube**, showing th
 - [ ] Money visibly arriving in a sandbox account
 - [ ] The two-person rule or decline flow mentioned (optional, if time allows)
 - [ ] Terminal agent donation over MCP, approved by a person in PayPal
+- [ ] Ledger question regrouping the AG Grid (the AI changes the view; the numbers come from the grid)
 - [ ] Copilot tool chips showing the PayPal Agent Toolkit
 - [ ] Ends under 3:00, with captions burned in (many judges watch muted); Spanish lines translated
 - [ ] No third-party product UI or logos beyond PayPal/Venmo (the sponsor) and your own app; no unlicensed music

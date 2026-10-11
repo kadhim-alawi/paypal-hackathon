@@ -107,7 +107,7 @@ export async function buildApp(opts: BuildOptions): Promise<{ app: FastifyInstan
       index: ["index.html"],
       setHeaders: (res, path) => {
         // Flutter's bootstrap and entry files must revalidate; everything else is versioned by the build.
-        const revalidate = /(index\.html|flutter_bootstrap\.js|flutter_service_worker\.js|main\.dart\.(js|wasm|mjs)|version\.json|manifest\.json)$/.test(path);
+        const revalidate = /(index\.html|flutter_bootstrap\.js|flutter_service_worker\.js|main\.dart\.(js|wasm|mjs)|version\.json|manifest\.json|ledger[\\/][^\\/]+\.js)$/.test(path);
         res.header("Cache-Control", revalidate ? "no-cache" : "public, max-age=86400");
       },
     });

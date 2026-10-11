@@ -110,6 +110,18 @@ All requests use `claude-opus-5-5` with adaptive thinking, per-task `effort`, an
 - `simulator.ts`: an in-process PayPal with the same wire formats and state machines (`CREATED → APPROVED → COMPLETED`, payouts `PENDING → SUCCESS/UNCLAIMED/FAILED/BLOCKED`), idempotency, error shapes, fees, webhooks, and hosted checkout and login pages with sandbox-style personas. Its history is rebuilt from the database at boot, so it survives restarts.
 - The copilot also loads `@paypal/agent-toolkit` tools when real credentials are configured.
 
+## Treasurer Ledger (AG Grid)
+
+`domain/ledger-rows.ts` flattens the append-only ledger into one row per money movement: date, month, fund, type, In/Out, a positive `amount`, a signed `net`, category, donor or case, method, channel (web, AI agent or staff), PayPal ID and status. The rows always sum to each fund's balance.
+
+The Flutter console hosts the grid in an `HtmlElementView` (`features/console/ledger/`), driven by `web/ledger/ledger.js` through `dart:js_interop`. AG Grid Enterprise (row grouping, pivoting, set filters, Excel export, side bar) is bundled by `tools/aggrid` with only the modules the Ledger uses, and loads only when the Ledger opens.
+
+**Ask the ledger** follows AG Grid's AI Toolkit pattern:
+
+1. The grid builds a JSON Schema of everything it can do right now (`api.getStructuredSchema()`: filters with the actual set values, sortable and groupable columns, aggregations, pivot, column visibility), with column descriptions.
+2. The server sends the question, the current state and that schema to Claude. `ai/strict-schema.ts` converts it to the structured-output subset (nullable types become `anyOf`, unsupported constraints move into descriptions), so the reply is valid grid state by construction. If the API won't compile the schema, the same schema goes in as a tool's input instead; offline, `ai/grid-heuristic.ts` maps keywords to state within the same schema.
+3. The browser applies the answer with `api.setState()` and shows Claude's one-line explanation. The AI only chooses the view; every total is computed by the grid.
+
 ## Agentic giving (`mcp/server.ts`)
 
 A stateless MCP server at `POST /mcp` (Streamable HTTP) exposes `list_funds`, `find_needs`, `get_impact`, `create_donation` and `get_donation_status`. `create_donation` returns a PayPal checkout link that the human must approve; agents can't move money on their own. Gifts are stored with `source = "agent"` and the agent's name. `agent/donor-agent.ts` (`npm run agent`) is a reference client: Claude connects over MCP, lists the tools, and runs a tool loop that ends with the checkout link for the person to approve.

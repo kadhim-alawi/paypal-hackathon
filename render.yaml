@@ -26,6 +26,9 @@ services:
       # Claude (console.anthropic.com)
       - key: ANTHROPIC_API_KEY
         sync: false
+      # AG Grid Enterprise licence for the staff Ledger (optional: evaluation watermark without it)
+      - key: AG_GRID_LICENSE_KEY
+        sync: false
       # Staff logins are created on first boot. While ADMIN_PASSWORD and
       # REVIEWER_PASSWORD are unset, the console offers one-click demo sign-in
       # for judges; add both in the dashboard to lock the console down.

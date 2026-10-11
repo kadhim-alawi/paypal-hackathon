@@ -43,7 +43,11 @@ Tideover gives a five-volunteer fund the speed of GiveDirectly with the controls
 - **Money:** every PayPal capture and payout with batch and transaction IDs, fees, and settlement time; payouts are tracked until final (unclaimed ones until they're claimed or PayPal returns them), and failed payouts can be retried.
 - **Policy compiler:** paste the fund's rules in plain English and Claude turns them into the structured rubric (categories, caps, required evidence, cooldown) that both the AI and the deterministic checks use.
 - **Treasurer copilot:** ask "how much can we still grant this week?" or "reconcile us with PayPal for the last 7 days". It answers from live data through Tideover tools and the official **PayPal Agent Toolkit**, and refunds always need explicit confirmation.
+- **Treasurer Ledger (AG Grid):** every dollar in and out as a live spreadsheet (fund, type, net, category, donor or case, PayPal ID, status), with filtering, drag-to-group totals, pivoting and CSV/Excel export. **Ask the ledger** in plain English: "total grants by category this month" goes to Claude together with the grid's own state schema from **AG Grid's AI Toolkit**, and the answer is applied to the grid, which regroups and totals itself. Claude never computes the numbers; the grid does.
 - **Append-only audit log** of every AI output, human decision, PayPal call and webhook.
+
+| ![Ledger](docs/screenshots/console-ledger.jpg) | ![Ask the ledger](docs/screenshots/console-ledger-ask.jpg) |
+|---|---|
 
 | ![Dashboard](docs/screenshots/console-dashboard.jpg) | ![Copilot](docs/screenshots/console-copilot.jpg) |
 |---|---|
@@ -78,6 +82,11 @@ Tideover gives a five-volunteer fund the speed of GiveDirectly with the controls
 | Agent with Tideover tools + PayPal Agent Toolkit | Treasurer copilot |
 | Short generation | Decision messages in the applicant's language; anonymized impact stories |
 
+| Also built with | Where |
+|---|---|
+| **AG Grid Enterprise** + **AI Toolkit** (`getStructuredSchema` → Claude structured output → `setState`) | Treasurer Ledger |
+| **Render** (Blueprint, Docker web service, Render Postgres) | Hosting |
+
 Prompt caching keeps the long policy prompts cheap, server-side fallbacks keep requests flowing through model overloads, and effort is tuned per task. Every AI call has a deterministic fallback, so the product keeps working (clearly labelled) if the AI is unavailable.
 
 ## Try it
@@ -99,7 +108,7 @@ No keys are needed to run it locally: without them it runs fully offline with th
 1. **Apply:** open the Eastside fund, choose **I need help**, and write something like *"Hola, se me descompuso el carro y necesito $380 para los frenos"*. Attach `demo-assets/eastside-auto-estimate-380.jpg` (sample documents are in [`demo-assets/`](demo-assets/)). Connect PayPal, pick **Maria Lopez** on the PayPal page, and submit. Keep this tab open.
 2. **Review:** in another window open `/console` and choose **Sign in as Sam (reviewer)**. Open the new case, read the AI case file and checks, and press **Approve & send**. The applicant tab flips to *Money sent* within seconds.
 3. **Give:** open the Riverside College fund, press **Fund this** on the waiting need, and pay with PayPal. The grant pays out the moment your gift is captured.
-4. **Operate:** look at **Money** (PayPal IDs and fees), **Audit**, **Funds** (try the policy compiler), and ask the **Copilot** to reconcile with PayPal.
+4. **Operate:** open the **Ledger** and tap *Total grants by category this month*, then try your own question or drag a column up to group by it. Look at **Money** (PayPal IDs and fees), **Audit**, **Funds** (try the policy compiler), and ask the **Copilot** to reconcile with PayPal.
 5. **Two-person rule:** Darnell's $750 rent case is over the $500 threshold, so it needs two different reviewers. Approve it as Sam, then sign out and approve again as **Avery (admin)**. If the fund's balance is short, the approved grant waits for donations and appears as a need on the public fund page, where any donor can fund it.
 
 A banner on every page states the mode. In **simulator mode** (no PayPal credentials), an in-process emulator of the PayPal APIs plays PayPal, including the checkout and login pages, so the full journey runs with no keys. With sandbox credentials, the same code talks to the real PayPal sandbox.
@@ -116,12 +125,16 @@ cd app && flutter pub get && flutter build web --release --no-web-resources-cdn
 cd ../server && npm ci && cp .env.example .env && npm run dev
 
 # 3. Open http://localhost:8080
+
+# Optional: build the AG Grid bundle for the Ledger (otherwise it loads from a CDN)
+cd ../tools/aggrid && npm ci && npm run build   # then rebuild the web app
 ```
 
 With an empty `.env` everything runs offline (PayPal simulator + rule-based AI). Add keys to switch on the real thing:
 
 - `ANTHROPIC_API_KEY` turns on Claude. Check it with `npm run verify:claude`.
 - `PAYPAL_CLIENT_ID` + `PAYPAL_CLIENT_SECRET` (+ `PAYPAL_WEBHOOK_ID`) switch to the PayPal sandbox. Check every PayPal API Tideover uses with `npm run verify:paypal`. Step-by-step sandbox setup is in **[docs/PAYPAL_SETUP.md](docs/PAYPAL_SETUP.md)**.
+- `AG_GRID_LICENSE_KEY` removes the AG Grid Enterprise evaluation watermark in the Ledger. Everything works without it.
 
 For the mobile app: `cd app && flutter run --dart-define=API_BASE=http://10.0.2.2:8080` (Android emulator) or your machine's LAN address.
 
@@ -167,9 +180,9 @@ More detail in **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
 ## Quality
 
-- `cd server && npm test`: 43 tests covering the applicant journey, Spanish-language applicants, approvals and the two-person rule, sponsored needs, risk checks, webhooks (including signature verification), MCP, reconciliation, the PayPal REST client against recorded wire formats, and the Claude provider against a fake Messages API (streaming tool loop, structured outputs, vision, fallbacks).
+- `cd server && npm test`: 49 tests covering the applicant journey, the Ledger (rows reconcile to fund balances; questions become schema-valid AG Grid state, through both Claude paths and the offline rules), Spanish-language applicants, approvals and the two-person rule, sponsored needs, risk checks, webhooks (including signature verification), MCP, reconciliation, the PayPal REST client against recorded wire formats, and the Claude provider against a fake Messages API (streaming tool loop, structured outputs, vision, fallbacks).
 - `cd app && flutter test`: unit and widget tests for formatting and the chat Markdown renderer. CI runs both suites, `flutter analyze` and the web build on every push.
-- `e2e/journey.mjs` drives the real UI end to end with Playwright: apply in Spanish with a document → Log in with PayPal → submit → reviewer approves → payout → applicant sees *Paid*; donor funds a need → instant grant; console pages.
+- `e2e/journey.mjs` drives the real UI end to end with Playwright: apply in Spanish with a document → Log in with PayPal → submit → reviewer approves → payout → applicant sees *Paid*; donor funds a need → instant grant; the Ledger answers a question by regrouping itself; console pages.
 - `npm run verify:paypal` and `npm run verify:claude` run live checks against your sandbox app and API key.
 
 ## Repository layout
@@ -180,8 +193,9 @@ server/       Fastify API, domain logic, PayPal gateway + simulator, AI layer, M
 demo-assets/  Fictional sample documents for trying the document reader
 docs/         Architecture, PayPal setup, demo script, submission text, screenshots
 e2e/          Playwright journeys
+tools/aggrid/ Builds the AG Grid bundle the Ledger loads on demand (AG Grid Enterprise isn't committed)
 ```
 
 ## License
 
-[MIT](LICENSE). The sample documents in `demo-assets/` are fictional.
+[MIT](LICENSE). The sample documents in `demo-assets/` are fictional. AG Grid Enterprise, used by the Ledger, is commercial software under its own licence; it is installed at build time, not included in this repository.

@@ -112,6 +112,26 @@ export interface CopilotContext {
   onTool: (event: { name: string; input: unknown; ok: boolean; preview: string }) => void;
 }
 
+/** "Ask the ledger": turn a treasurer's question into AG Grid state (AG Grid AI Toolkit). */
+export interface GridQueryContext {
+  question: string;
+  /** JSON Schema of the grid's controllable state, from AG Grid's `api.getStructuredSchema()`. */
+  schema: Record<string, unknown>;
+  /** The grid's current state for those features, from `api.getState()`. */
+  state: Record<string, unknown>;
+  /** YYYY-MM-DD, so "this month" and "last week" resolve. */
+  today: string;
+}
+
+export interface GridQueryResult {
+  /** Grid state conforming to the schema; null for a feature clears it. */
+  gridState: Record<string, unknown>;
+  /** Features to leave exactly as they are. */
+  propertiesToIgnore: string[];
+  /** One or two sentences telling the treasurer what the view now shows. */
+  explanation: string;
+}
+
 export interface AiProvider {
   readonly mode: "claude" | "heuristic";
   readonly model: string;
@@ -122,6 +142,7 @@ export interface AiProvider {
   writeStory(ctx: StoryContext): Promise<string>;
   decisionMessage(ctx: DecisionMessageContext): Promise<string>;
   copilotTurn(ctx: CopilotContext): Promise<string>;
+  gridQuery(ctx: GridQueryContext): Promise<GridQueryResult>;
 }
 
 export class AiUnavailableError extends Error {}

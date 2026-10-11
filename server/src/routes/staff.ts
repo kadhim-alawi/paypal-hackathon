@@ -18,6 +18,7 @@ import { copilotHistory, runCopilotTurn } from "../domain/copilot.js";
 import { addNote, approvalsRequired, approve, deny, requestInfo } from "../domain/decisions.js";
 import { disburse, syncPayout } from "../domain/disbursement.js";
 import { fundStats, publicFund, updateFundSettings } from "../domain/funds.js";
+import { ledgerRows } from "../domain/ledger-rows.js";
 import type { ApplicationStatus, FundRubric } from "../domain/types.js";
 import { caseSummary, donationView, payoutView, staffCaseView } from "../domain/views.js";
 import { requireStaff, signStaffToken } from "../http/auth.js";
@@ -27,6 +28,11 @@ import { verifyPassword } from "../lib/passwords.js";
 import { median } from "../lib/time.js";
 import type { Services } from "../services.js";
 
+const LedgerAskBody = z.object({
+  question: z.string().trim().min(2).max(500),
+  schema: z.record(z.string(), z.unknown()),
+  state: z.record(z.string(), z.unknown()).optional(),
+});
 const LoginBody = z.object({ email: z.string().email(), password: z.string().min(1) });
 const ApproveBody = z.object({ amountCents: z.number().int().positive().nullish(), note: z.string().max(1000).nullish() });
 const DenyBody = z.object({ reason: z.string().min(3).max(1000) });
@@ -331,6 +337,34 @@ export async function staffRoutes(app: FastifyInstance, s: Services) {
       .orderBy(desc(donations.createdAt))
       .limit(200);
     return rows.map((r) => ({ ...donationView(r.d, { staff: true }), fundName: r.fundName }));
+  });
+
+  // --------------------------------------------------------------- ledger
+  // The treasurer's Ledger (AG Grid): every money movement, and "ask the ledger",
+  // which turns a question into grid state via the AG Grid AI Toolkit schema.
+  app.get("/api/staff/ledger", async (req) => {
+    await requireStaff(s, req);
+    return ledgerRows(s);
+  });
+
+  app.post("/api/staff/ledger/ask", { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (req) => {
+    await requireStaff(s, req);
+    const body = parse(LedgerAskBody, req.body);
+    if (JSON.stringify(body.schema).length > 200_000) throw badRequest("Grid schema is too large");
+    try {
+      const result = await s.ai.gridQuery({
+        question: body.question,
+        schema: body.schema,
+        state: body.state ?? {},
+        today: new Date().toISOString().slice(0, 10),
+      });
+      return { ...result, mode: s.ai.mode };
+    } catch (err) {
+      req.log.warn({ err }, "ledger question failed; answering with rules");
+      const { heuristicGridQuery } = await import("../ai/grid-heuristic.js");
+      const fallback = heuristicGridQuery({ question: body.question, schema: body.schema, state: body.state ?? {}, today: new Date().toISOString().slice(0, 10) });
+      return { ...fallback, mode: "heuristic" };
+    }
   });
 
   // ---------------------------------------------------------------- funds

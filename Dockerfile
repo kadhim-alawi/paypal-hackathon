@@ -18,7 +18,15 @@ RUN flutter pub get
 COPY app/ ./
 RUN flutter build web --release --no-web-resources-cdn --no-wasm-dry-run
 
-# ---- 2. Server build ---------------------------------------------------------
+# ---- 2. AG Grid bundle for the staff Ledger (only the modules it uses) -------
+FROM node:22-bookworm-slim AS aggrid
+WORKDIR /aggrid
+COPY tools/aggrid/package.json tools/aggrid/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY tools/aggrid/entry.mjs ./
+RUN OUT=/aggrid/aggrid.js npm run build
+
+# ---- 3. Server build ---------------------------------------------------------
 FROM node:22-bookworm-slim AS server
 WORKDIR /srv
 COPY server/package.json server/package-lock.json ./
@@ -26,7 +34,7 @@ RUN npm ci --no-audit --no-fund
 COPY server/ ./
 RUN npm run build && npm prune --omit=dev --no-audit --no-fund
 
-# ---- 3. Runtime --------------------------------------------------------------
+# ---- 4. Runtime --------------------------------------------------------------
 FROM node:22-bookworm-slim
 ENV NODE_ENV=production \
     PORT=8080 \
@@ -37,6 +45,7 @@ COPY --from=server /srv/package.json ./
 COPY --from=server /srv/node_modules ./node_modules
 COPY --from=server /srv/dist ./dist
 COPY --from=web /app/build/web ./web
+COPY --from=aggrid /aggrid/aggrid.js ./web/ledger/aggrid.js
 COPY demo-assets ./demo-assets
 RUN mkdir -p /srv/data && chown -R node:node /srv/data
 USER node

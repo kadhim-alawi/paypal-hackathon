@@ -8,6 +8,7 @@ import {
   copilotSystemPrompt,
   DECISION_SYSTEM_PROMPT,
   DOCUMENT_SYSTEM_PROMPT,
+  GRID_QUERY_SYSTEM_PROMPT,
   intakeSystemPrompt,
   POLICY_SYSTEM_PROMPT,
   STORY_SYSTEM_PROMPT,
@@ -20,10 +21,13 @@ import {
   type CopilotContext,
   type DecisionMessageContext,
   type DocumentContext,
+  type GridQueryContext,
+  type GridQueryResult,
   type IntakeContext,
   type StoryContext,
 } from "./types.js";
 import { normalizeRubric, renderAssessmentCase, summarizeDocumentForChat } from "./shared.js";
+import { toStrictSchema } from "./strict-schema.js";
 
 type BetaMessageParam = Anthropic.Beta.Messages.BetaMessageParam;
 type BetaToolUnion = Anthropic.Beta.Messages.BetaToolUnion;
@@ -559,6 +563,82 @@ export class ClaudeAi implements AiProvider {
     }
     return full.trim();
   }
+
+  // ------------------------------------------------- ask the ledger (AG Grid)
+
+  /**
+   * AG Grid AI Toolkit: the grid's own JSON Schema constrains Claude's answer, so
+   * the result can go straight into `api.setState()`. Structured outputs first;
+   * if the API can't compile that schema, the same schema as a tool's input.
+   */
+  async gridQuery(ctx: GridQueryContext): Promise<GridQueryResult> {
+    const features = Object.keys((ctx.schema.properties ?? {}) as Record<string, unknown>);
+    const wrapper = {
+      type: "object",
+      additionalProperties: false,
+      required: ["explanation", "propertiesToIgnore", "gridState"],
+      properties: {
+        explanation: { type: "string", description: "One or two short sentences for the treasurer about what the grid now shows." },
+        propertiesToIgnore: {
+          type: "array",
+          description: "Grid state features to leave exactly as they are now.",
+          items: { type: "string", enum: features },
+        },
+        gridState: ctx.schema,
+      },
+    };
+    const request = `Today is ${ctx.today}.\n\nCurrent grid state:\n${JSON.stringify(ctx.state)}\n\nTreasurer's question:\n<question>${ctx.question}</question>`;
+    const system: Anthropic.Beta.Messages.BetaTextBlockParam[] = [{ type: "text", text: GRID_QUERY_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }];
+
+    let raw: unknown;
+    try {
+      const res = await this.client.beta.messages.create({
+        model: this.model,
+        max_tokens: 16000,
+        system,
+        messages: [{ role: "user", content: request }],
+        output_config: { effort: "medium", format: { type: "json_schema", schema: toStrictSchema(wrapper) } },
+        ...this.fallback(),
+      });
+      if (res.stop_reason === "refusal") throw new AiUnavailableError("The model declined this request");
+      if (res.stop_reason === "max_tokens") throw new AiUnavailableError("Grid state was truncated");
+      raw = JSON.parse(textOf(res.content));
+    } catch (err) {
+      if (!(err instanceof Anthropic.BadRequestError)) throw err;
+      // Schema the structured-output compiler won't take: ask for the same object as a tool call.
+      const res = await this.client.beta.messages.create({
+        model: this.model,
+        max_tokens: 16000,
+        system,
+        tools: [
+          {
+            name: "set_grid_state",
+            description: "Apply a view to the Ledger grid. Call it exactly once.",
+            input_schema: wrapper as Anthropic.Beta.Messages.BetaTool.InputSchema,
+          },
+        ],
+        messages: [{ role: "user", content: `${request}\n\nAnswer by calling set_grid_state.` }],
+        output_config: { effort: "medium" },
+        ...this.fallback(),
+      });
+      const use = res.content.find((b): b is Anthropic.Beta.Messages.BetaToolUseBlock => b.type === "tool_use");
+      if (!use) throw new AiUnavailableError("No grid state returned");
+      raw = use.input;
+    }
+    return coerceGridResult(raw, features);
+  }
+}
+
+/** Keeps only known features and a string explanation; the grid validates the rest. */
+function coerceGridResult(raw: unknown, features: string[]): GridQueryResult {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const state = (r.gridState && typeof r.gridState === "object" ? r.gridState : {}) as Record<string, unknown>;
+  const gridState = Object.fromEntries(Object.entries(state).filter(([k]) => features.includes(k)));
+  const propertiesToIgnore = Array.isArray(r.propertiesToIgnore)
+    ? (r.propertiesToIgnore as unknown[]).filter((k): k is string => typeof k === "string" && features.includes(k))
+    : [];
+  const explanation = typeof r.explanation === "string" && r.explanation.trim() ? r.explanation.trim() : "Updated the ledger view.";
+  return { gridState, propertiesToIgnore, explanation };
 }
 
 export { summarizeDocumentForChat };

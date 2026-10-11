@@ -11,6 +11,7 @@ import 'features/console/copilot_page.dart';
 import 'features/console/dashboard_page.dart';
 import 'features/console/funds_page.dart';
 import 'features/console/login_page.dart';
+import 'features/console/ledger_page.dart';
 import 'features/console/money_page.dart';
 import 'features/console/shell.dart';
 import 'features/fund/fund_page.dart';
@@ -61,6 +62,7 @@ GoRouter buildRouter(AppServices services) {
           ),
           GoRoute(path: '/console/cases/:id', builder: (_, s) => CasePage(id: s.pathParameters['id']!)),
           GoRoute(path: '/console/money', builder: (_, _) => const MoneyPage()),
+          GoRoute(path: '/console/ledger', builder: (_, _) => const LedgerPage()),
           GoRoute(path: '/console/copilot', builder: (_, _) => const CopilotPage()),
           GoRoute(path: '/console/funds', builder: (_, _) => const FundsPage()),
           GoRoute(path: '/console/audit', builder: (_, _) => const AuditPage()),

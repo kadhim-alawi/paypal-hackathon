@@ -34,6 +34,8 @@ const EnvSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   TIDEOVER_ANTHROPIC_BASE_URL: z.string().url().optional(),
   CLAUDE_MODEL: z.string().default("claude-opus-5-5"),
+  /** AG Grid Enterprise licence for the staff Ledger; without it the grid runs in evaluation mode (watermark). */
+  AG_GRID_LICENSE_KEY: z.string().optional(),
 
   SEED_DEMO: z
     .enum(["true", "false"])
@@ -74,6 +76,7 @@ export interface AppConfig {
     baseUrl: string;
     model: string;
   };
+  agGridLicenseKey?: string;
   seedDemo: boolean;
   admin: { email: string; password: string };
   reviewer: { email: string; password: string };
@@ -127,6 +130,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       baseUrl: parsed.TIDEOVER_ANTHROPIC_BASE_URL ?? "https://api.anthropic.com",
       model: parsed.CLAUDE_MODEL,
     },
+    agGridLicenseKey: parsed.AG_GRID_LICENSE_KEY || undefined,
     seedDemo: parsed.SEED_DEMO,
     admin: { email: parsed.ADMIN_EMAIL, password: parsed.ADMIN_PASSWORD },
     reviewer: { email: parsed.REVIEWER_EMAIL, password: parsed.REVIEWER_PASSWORD },

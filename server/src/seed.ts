@@ -231,6 +231,7 @@ export async function seedDemo(s: Services): Promise<void> {
     refType: "opening_balance",
     refId: eastsideId,
     memo: "Opening balance in the fund's PayPal account",
+    at: new Date(now - 30 * DAY),
   });
 
   // ------------------------------------------------------------ donations
@@ -270,8 +271,8 @@ export async function seedDemo(s: Services): Promise<void> {
       createdAt: at,
       capturedAt: at,
     });
-    await postLedger(s.db, { fundId, kind: "donation", amountCents: amount, refType: "donation", refId: id, memo: "Seeded history" });
-    await postLedger(s.db, { fundId, kind: "donation_fee", amountCents: -fee, refType: "donation", refId: id, memo: "Seeded history" });
+    await postLedger(s.db, { fundId, kind: "donation", amountCents: amount, refType: "donation", refId: id, memo: "Seeded history", at });
+    await postLedger(s.db, { fundId, kind: "donation_fee", amountCents: -fee, refType: "donation", refId: id, memo: "Seeded history", at });
   }
 
   // ------------------------------------------------------- past grants
@@ -338,8 +339,9 @@ export async function seedDemo(s: Services): Promise<void> {
       sentAt: new Date(paidAt.getTime() - 2 * MIN),
       completedAt: paidAt,
     });
-    await postLedger(s.db, { fundId: eastsideId, kind: "payout", amountCents: -h.amount, refType: "payout", refId: payoutId, memo: "Seeded history" });
-    await postLedger(s.db, { fundId: eastsideId, kind: "payout_fee", amountCents: -fee, refType: "payout", refId: payoutId, memo: "Seeded history" });
+    const sentAt = new Date(paidAt.getTime() - 2 * MIN);
+    await postLedger(s.db, { fundId: eastsideId, kind: "payout", amountCents: -h.amount, refType: "payout", refId: payoutId, memo: "Seeded history", at: sentAt });
+    await postLedger(s.db, { fundId: eastsideId, kind: "payout_fee", amountCents: -fee, refType: "payout", refId: payoutId, memo: "Seeded history", at: sentAt });
   }
 
   // ------------------------------------------- cases waiting for a reviewer

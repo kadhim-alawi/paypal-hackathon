@@ -27,6 +27,9 @@ app/android/app/release
 .vscode/
 .DS_Store
 
+# AG Grid bundle (built by tools/aggrid; AG Grid Enterprise is commercial, so it isn't committed)
+app/web/ledger/aggrid.js
+
 # Test artifacts
 server/coverage/
 e2e/screenshots/

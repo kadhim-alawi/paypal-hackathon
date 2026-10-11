@@ -11,11 +11,12 @@ import type { LedgerKind } from "./types.js";
  */
 export async function postLedger(
   db: Db,
-  entry: { fundId: string; kind: LedgerKind; amountCents: number; refType: string; refId: string; memo?: string },
+  entry: { fundId: string; kind: LedgerKind; amountCents: number; refType: string; refId: string; memo?: string; at?: Date },
 ): Promise<boolean> {
+  const { at, ...values } = entry;
   const inserted = await db
     .insert(ledgerEntries)
-    .values({ id: newId("led"), ...entry })
+    .values({ id: newId("led"), ...values, ...(at ? { createdAt: at } : {}) })
     .onConflictDoNothing({ target: [ledgerEntries.kind, ledgerEntries.refType, ledgerEntries.refId] })
     .returning({ id: ledgerEntries.id });
   return inserted.length > 0;

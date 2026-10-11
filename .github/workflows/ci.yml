@@ -23,6 +23,22 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  aggrid:
+    name: AG Grid bundle for the Ledger
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/aggrid
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/aggrid/package-lock.json
+      - run: npm ci
+      - run: OUT=/tmp/aggrid.js npm run build
+
   app:
     name: Flutter app (analyze, tests, web build)
     runs-on: ubuntu-latest

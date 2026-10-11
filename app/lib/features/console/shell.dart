@@ -27,6 +27,7 @@ const _dests = [
   _Dest('/console', 'Overview', Icons.space_dashboard_outlined, Icons.space_dashboard_rounded),
   _Dest('/console/cases', 'Cases', Icons.inbox_outlined, Icons.inbox_rounded),
   _Dest('/console/money', 'Money', Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded),
+  _Dest('/console/ledger', 'Ledger', Icons.table_chart_outlined, Icons.table_chart_rounded),
   _Dest('/console/copilot', 'Copilot', Icons.auto_awesome_outlined, Icons.auto_awesome_rounded),
   _Dest('/console/funds', 'Funds', Icons.tune_outlined, Icons.tune_rounded),
   _Dest('/console/audit', 'Audit', Icons.receipt_long_outlined, Icons.receipt_long_rounded),

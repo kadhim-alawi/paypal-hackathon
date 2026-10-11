@@ -137,6 +137,16 @@ await snap(donor, "thanks-delivered");
 await open(donor, "/f/eastside");
 await snap(donor, "fund-eastside-after");
 
+// Treasurer Ledger (AG Grid): load every movement, then ask in plain English.
+await open(staff, "/console/ledger");
+await sleep(4000);
+await snap(staff, "console-ledger");
+await staff.getByRole("checkbox", { name: "Total grants by category", exact: false }).first().click();
+await sleep(2500);
+const ledgerState = await staff.evaluate(() => window.tideoverLedger.state());
+if (JSON.stringify(ledgerState.rowGroup) !== JSON.stringify({ groupColIds: ["category"] })) throw new Error("ledger question didn't group by category: " + JSON.stringify(ledgerState));
+await snap(staff, "console-ledger-ask");
+
 // Remaining console pages.
 for (const [path, name] of [["/console/money", "console-money"], ["/console/funds", "console-funds"], ["/console/audit", "console-audit"], ["/console/copilot", "console-copilot"]]) {
   await open(staff, path);

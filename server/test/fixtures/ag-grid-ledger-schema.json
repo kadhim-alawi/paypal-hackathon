@@ -1,0 +1,1150 @@
+{
+ "type": "object",
+ "required": [
+  "aggregation",
+  "filter",
+  "sort",
+  "pivot",
+  "columnVisibility",
+  "rowGroup"
+ ],
+ "additionalProperties": false,
+ "properties": {
+  "aggregation": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "description": "Aggregation configuration for the grid",
+   "required": [
+    "aggregationModel"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "aggregationModel": {
+     "type": "array",
+     "description": "Array of column aggregations",
+     "items": {
+      "anyOf": [
+       {
+        "type": "object",
+        "required": [
+         "colId",
+         "aggFunc"
+        ],
+        "additionalProperties": false,
+        "properties": {
+         "colId": {
+          "type": "string",
+          "description": "Column identifier",
+          "enum": [
+           "amount"
+          ]
+         },
+         "aggFunc": {
+          "type": "string",
+          "description": "Aggregation function",
+          "enum": [
+           "sum",
+           "avg",
+           "max",
+           "min",
+           "count",
+           "first",
+           "last"
+          ]
+         }
+        }
+       },
+       {
+        "type": "object",
+        "required": [
+         "colId",
+         "aggFunc"
+        ],
+        "additionalProperties": false,
+        "properties": {
+         "colId": {
+          "type": "string",
+          "description": "Column identifier",
+          "enum": [
+           "net"
+          ]
+         },
+         "aggFunc": {
+          "type": "string",
+          "description": "Aggregation function",
+          "enum": [
+           "sum",
+           "avg",
+           "max",
+           "min",
+           "count",
+           "first",
+           "last"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  "filter": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "required": [
+    "filterModel"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "filterModel": {
+     "type": "object",
+     "required": [
+      "date",
+      "month",
+      "fund",
+      "type",
+      "direction",
+      "amount",
+      "net",
+      "category",
+      "party",
+      "method",
+      "channel",
+      "caseRef",
+      "paypalId",
+      "status",
+      "memo"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "date": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "operator",
+        "conditions"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for date filters with multiple conditions",
+         "enum": [
+          "date"
+         ]
+        },
+        "operator": {
+         "type": "string",
+         "description": "Logical operator to combine multiple filter conditions. Must be included even with a single filter to adhere to the API.",
+         "enum": [
+          "AND",
+          "OR"
+         ]
+        },
+        "conditions": {
+         "type": "array",
+         "description": "Array of filter conditions to be combined",
+         "items": {
+          "type": "object",
+          "required": [
+           "filterType",
+           "type",
+           "dateFrom",
+           "dateTo"
+          ],
+          "additionalProperties": false,
+          "properties": {
+           "filterType": {
+            "type": "string",
+            "description": "Filter type identifier for date filters",
+            "enum": [
+             "date"
+            ]
+           },
+           "type": {
+            "type": "string",
+            "description": "Date filter operation type",
+            "enum": [
+             "equals",
+             "notEqual",
+             "lessThan",
+             "greaterThan",
+             "inRange",
+             "blank",
+             "notBlank"
+            ]
+           },
+           "dateFrom": {
+            "type": [
+             "string",
+             "null"
+            ],
+            "description": "Primary date filter value in YYYY-MM-DD HH:mm:ss format",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$"
+           },
+           "dateTo": {
+            "type": [
+             "string",
+             "null"
+            ],
+            "description": "Secondary date filter value for range operations in YYYY-MM-DD HH:mm:ss format",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$"
+           }
+          }
+         },
+         "minItems": 2,
+         "maxItems": 2
+        }
+       }
+      },
+      "month": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "values"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for set filters",
+         "enum": [
+          "set"
+         ]
+        },
+        "values": {
+         "type": "array",
+         "description": "Array of values to include in the filter",
+         "items": {
+          "type": "string",
+          "description": "Available values to filter by",
+          "enum": [
+           "2026-10"
+          ]
+         }
+        }
+       }
+      },
+      "fund": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "values"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for set filters",
+         "enum": [
+          "set"
+         ]
+        },
+        "values": {
+         "type": "array",
+         "description": "Array of values to include in the filter",
+         "items": {
+          "type": "string",
+          "description": "Available values to filter by",
+          "enum": [
+           "Eastside Neighbors Emergency Fund",
+           "Riverside College Student Emergency Grants"
+          ]
+         }
+        }
+       }
+      },
+      "type": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "values"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for set filters",
+         "enum": [
+          "set"
+         ]
+        },
+        "values": {
+         "type": "array",
+         "description": "Array of values to include in the filter",
+         "items": {
+          "type": "string",
+          "description": "Available values to filter by",
+          "enum": [
+           "PayPal fee (payout)",
+           "Grant",
+           "PayPal fee (donation)",
+           "Donation",
+           "Adjustment"
+          ]
+         }
+        }
+       }
+      },
+      "direction": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "values"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for set filters",
+         "enum": [
+          "set"
+         ]
+        },
+        "values": {
+         "type": "array",
+         "description": "Array of values to include in the filter",
+         "items": {
+          "type": "string",
+          "description": "Available values to filter by",
+          "enum": [
+           "Out",
+           "In"
+          ]
+         }
+        }
+       }
+      },
+      "amount": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "operator",
+        "conditions"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for number filters with multiple conditions",
+         "enum": [
+          "number"
+         ]
+        },
+        "operator": {
+         "type": "string",
+         "description": "Logical operator to combine multiple filter conditions. Must be included even with a single filter to adhere to the API.",
+         "enum": [
+          "AND",
+          "OR"
+         ]
+        },
+        "conditions": {
+         "type": "array",
+         "description": "Array of filter conditions to be combined",
+         "items": {
+          "type": "object",
+          "required": [
+           "filterType",
+           "type",
+           "filter",
+           "filterTo"
+          ],
+          "additionalProperties": false,
+          "properties": {
+           "filterType": {
+            "type": "string",
+            "description": "Filter type identifier for number filters",
+            "enum": [
+             "number"
+            ]
+           },
+           "type": {
+            "type": "string",
+            "description": "Number filter operation type",
+            "enum": [
+             "equals",
+             "notEqual",
+             "greaterThan",
+             "greaterThanOrEqual",
+             "lessThan",
+             "lessThanOrEqual",
+             "inRange",
+             "blank",
+             "notBlank"
+            ]
+           },
+           "filter": {
+            "type": [
+             "number",
+             "null"
+            ],
+            "description": "Primary filter value"
+           },
+           "filterTo": {
+            "type": [
+             "number",
+             "null"
+            ],
+            "description": "Secondary filter value for range operations"
+           }
+          }
+         },
+         "minItems": 2,
+         "maxItems": 2
+        }
+       }
+      },
+      "net": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "operator",
+        "conditions"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for number filters with multiple conditions",
+         "enum": [
+          "number"
+         ]
+        },
+        "operator": {
+         "type": "string",
+         "description": "Logical operator to combine multiple filter conditions. Must be included even with a single filter to adhere to the API.",
+         "enum": [
+          "AND",
+          "OR"
+         ]
+        },
+        "conditions": {
+         "type": "array",
+         "description": "Array of filter conditions to be combined",
+         "items": {
+          "type": "object",
+          "required": [
+           "filterType",
+           "type",
+           "filter",
+           "filterTo"
+          ],
+          "additionalProperties": false,
+          "properties": {
+           "filterType": {
+            "type": "string",
+            "description": "Filter type identifier for number filters",
+            "enum": [
+             "number"
+            ]
+           },
+           "type": {
+            "type": "string",
+            "description": "Number filter operation type",
+            "enum": [
+             "equals",
+             "notEqual",
+             "greaterThan",
+             "greaterThanOrEqual",
+             "lessThan",
+             "lessThanOrEqual",
+             "inRange",
+             "blank",
+             "notBlank"
+            ]
+           },
+           "filter": {
+            "type": [
+             "number",
+             "null"
+            ],
+            "description": "Primary filter value"
+           },
+           "filterTo": {
+            "type": [
+             "number",
+             "null"
+            ],
+            "description": "Secondary filter value for range operations"
+           }
+          }
+         },
+         "minItems": 2,
+         "maxItems": 2
+        }
+       }
+      },
+      "category": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "values"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for set filters",
+         "enum": [
+          "set"
+         ]
+        },
+        "values": {
+         "type": "array",
+         "description": "Array of values to include in the filter",
+         "items": {
+          "type": "string",
+          "description": "Available values to filter by",
+          "enum": [
+           "Groceries & baby supplies",
+           "Rent & eviction prevention",
+           "Prescriptions & urgent medical",
+           "Utility shut-off",
+           "Car repair & transportation",
+           "General fund"
+          ]
+         }
+        }
+       }
+      },
+      "party": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "operator",
+        "conditions"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for text filters with multiple conditions",
+         "enum": [
+          "text"
+         ]
+        },
+        "operator": {
+         "type": "string",
+         "description": "Logical operator to combine multiple filter conditions. Must be included even with a single filter to adhere to the API.",
+         "enum": [
+          "AND",
+          "OR"
+         ]
+        },
+        "conditions": {
+         "type": "array",
+         "description": "Array of filter conditions to be combined",
+         "items": {
+          "type": "object",
+          "required": [
+           "filterType",
+           "type",
+           "filter",
+           "filterTo"
+          ],
+          "additionalProperties": false,
+          "properties": {
+           "filterType": {
+            "type": "string",
+            "description": "Filter type identifier for text filters",
+            "enum": [
+             "text"
+            ]
+           },
+           "type": {
+            "type": "string",
+            "description": "Text filter operation type",
+            "enum": [
+             "contains",
+             "notContains",
+             "equals",
+             "notEqual",
+             "startsWith",
+             "endsWith",
+             "blank",
+             "notBlank"
+            ]
+           },
+           "filter": {
+            "type": [
+             "string",
+             "null"
+            ],
+            "description": "Primary filter value"
+           },
+           "filterTo": {
+            "type": [
+             "string",
+             "null"
+            ],
+            "description": "Secondary filter value for range operations"
+           }
+          }
+         },
+         "minItems": 2,
+         "maxItems": 2
+        }
+       }
+      },
+      "method": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "values"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for set filters",
+         "enum": [
+          "set"
+         ]
+        },
+        "values": {
+         "type": "array",
+         "description": "Array of values to include in the filter",
+         "items": {
+          "type": "string",
+          "description": "Available values to filter by",
+          "enum": [
+           "PayPal email",
+           "PayPal account",
+           "Venmo",
+           "PayPal checkout"
+          ]
+         }
+        }
+       }
+      },
+      "channel": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "values"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for set filters",
+         "enum": [
+          "set"
+         ]
+        },
+        "values": {
+         "type": "array",
+         "description": "Array of values to include in the filter",
+         "items": {
+          "type": "string",
+          "description": "Available values to filter by",
+          "enum": [
+           "Staff",
+           "Web",
+           "AI agent"
+          ]
+         }
+        }
+       }
+      },
+      "caseRef": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "operator",
+        "conditions"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for text filters with multiple conditions",
+         "enum": [
+          "text"
+         ]
+        },
+        "operator": {
+         "type": "string",
+         "description": "Logical operator to combine multiple filter conditions. Must be included even with a single filter to adhere to the API.",
+         "enum": [
+          "AND",
+          "OR"
+         ]
+        },
+        "conditions": {
+         "type": "array",
+         "description": "Array of filter conditions to be combined",
+         "items": {
+          "type": "object",
+          "required": [
+           "filterType",
+           "type",
+           "filter",
+           "filterTo"
+          ],
+          "additionalProperties": false,
+          "properties": {
+           "filterType": {
+            "type": "string",
+            "description": "Filter type identifier for text filters",
+            "enum": [
+             "text"
+            ]
+           },
+           "type": {
+            "type": "string",
+            "description": "Text filter operation type",
+            "enum": [
+             "contains",
+             "notContains",
+             "equals",
+             "notEqual",
+             "startsWith",
+             "endsWith",
+             "blank",
+             "notBlank"
+            ]
+           },
+           "filter": {
+            "type": [
+             "string",
+             "null"
+            ],
+            "description": "Primary filter value"
+           },
+           "filterTo": {
+            "type": [
+             "string",
+             "null"
+            ],
+            "description": "Secondary filter value for range operations"
+           }
+          }
+         },
+         "minItems": 2,
+         "maxItems": 2
+        }
+       }
+      },
+      "paypalId": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "operator",
+        "conditions"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for text filters with multiple conditions",
+         "enum": [
+          "text"
+         ]
+        },
+        "operator": {
+         "type": "string",
+         "description": "Logical operator to combine multiple filter conditions. Must be included even with a single filter to adhere to the API.",
+         "enum": [
+          "AND",
+          "OR"
+         ]
+        },
+        "conditions": {
+         "type": "array",
+         "description": "Array of filter conditions to be combined",
+         "items": {
+          "type": "object",
+          "required": [
+           "filterType",
+           "type",
+           "filter",
+           "filterTo"
+          ],
+          "additionalProperties": false,
+          "properties": {
+           "filterType": {
+            "type": "string",
+            "description": "Filter type identifier for text filters",
+            "enum": [
+             "text"
+            ]
+           },
+           "type": {
+            "type": "string",
+            "description": "Text filter operation type",
+            "enum": [
+             "contains",
+             "notContains",
+             "equals",
+             "notEqual",
+             "startsWith",
+             "endsWith",
+             "blank",
+             "notBlank"
+            ]
+           },
+           "filter": {
+            "type": [
+             "string",
+             "null"
+            ],
+            "description": "Primary filter value"
+           },
+           "filterTo": {
+            "type": [
+             "string",
+             "null"
+            ],
+            "description": "Secondary filter value for range operations"
+           }
+          }
+         },
+         "minItems": 2,
+         "maxItems": 2
+        }
+       }
+      },
+      "status": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "values"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for set filters",
+         "enum": [
+          "set"
+         ]
+        },
+        "values": {
+         "type": "array",
+         "description": "Array of values to include in the filter",
+         "items": {
+          "type": "string",
+          "description": "Available values to filter by",
+          "enum": [
+           "success",
+           "captured"
+          ]
+         }
+        }
+       }
+      },
+      "memo": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "required": [
+        "filterType",
+        "operator",
+        "conditions"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "filterType": {
+         "type": "string",
+         "description": "Filter type identifier for text filters with multiple conditions",
+         "enum": [
+          "text"
+         ]
+        },
+        "operator": {
+         "type": "string",
+         "description": "Logical operator to combine multiple filter conditions. Must be included even with a single filter to adhere to the API.",
+         "enum": [
+          "AND",
+          "OR"
+         ]
+        },
+        "conditions": {
+         "type": "array",
+         "description": "Array of filter conditions to be combined",
+         "items": {
+          "type": "object",
+          "required": [
+           "filterType",
+           "type",
+           "filter",
+           "filterTo"
+          ],
+          "additionalProperties": false,
+          "properties": {
+           "filterType": {
+            "type": "string",
+            "description": "Filter type identifier for text filters",
+            "enum": [
+             "text"
+            ]
+           },
+           "type": {
+            "type": "string",
+            "description": "Text filter operation type",
+            "enum": [
+             "contains",
+             "notContains",
+             "equals",
+             "notEqual",
+             "startsWith",
+             "endsWith",
+             "blank",
+             "notBlank"
+            ]
+           },
+           "filter": {
+            "type": [
+             "string",
+             "null"
+            ],
+            "description": "Primary filter value"
+           },
+           "filterTo": {
+            "type": [
+             "string",
+             "null"
+            ],
+            "description": "Secondary filter value for range operations"
+           }
+          }
+         },
+         "minItems": 2,
+         "maxItems": 2
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "sort": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "description": "Sort configuration for the grid",
+   "required": [
+    "sortModel"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "sortModel": {
+     "type": "array",
+     "description": "Array of sort configurations",
+     "items": {
+      "type": "object",
+      "required": [
+       "colId",
+       "sort",
+       "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "colId": {
+        "type": "string",
+        "description": "Column ID that supports sorting",
+        "enum": [
+         "date",
+         "month",
+         "fund",
+         "type",
+         "direction",
+         "amount",
+         "net",
+         "category",
+         "party",
+         "method",
+         "channel",
+         "caseRef",
+         "paypalId",
+         "status",
+         "memo"
+        ]
+       },
+       "sort": {
+        "type": "string",
+        "description": "Sort direction: ascending or descending",
+        "enum": [
+         "asc",
+         "desc"
+        ]
+       },
+       "type": {
+        "type": "string",
+        "description": "Sort type: default or absolute values",
+        "enum": [
+         "default",
+         "absolute"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "pivot": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "description": "Pivot configuration for the grid",
+   "required": [
+    "pivotMode",
+    "pivotColIds"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "pivotMode": {
+     "type": "boolean",
+     "description": "Whether pivot mode is enabled"
+    },
+    "pivotColIds": {
+     "type": "array",
+     "description": "Array of column IDs to use as pivot columns",
+     "items": {
+      "type": "string",
+      "description": "Column ID that supports pivoting",
+      "enum": [
+       "month",
+       "fund",
+       "type",
+       "direction",
+       "category",
+       "method",
+       "channel",
+       "status"
+      ]
+     }
+    }
+   }
+  },
+  "columnVisibility": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "description": "Column visibility configuration for the grid",
+   "required": [
+    "hiddenColIds"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "hiddenColIds": {
+     "type": "array",
+     "description": "Array of column IDs to hide",
+     "items": {
+      "$ref": "#/$defs/allColumnIds"
+     }
+    }
+   }
+  },
+  "rowGroup": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "description": "Row grouping configuration for the grid",
+   "required": [
+    "groupColIds"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "groupColIds": {
+     "type": "array",
+     "description": "Array of column IDs to group by",
+     "items": {
+      "type": "string",
+      "description": "Column ID that supports row grouping",
+      "enum": [
+       "month",
+       "fund",
+       "type",
+       "direction",
+       "category",
+       "party",
+       "method",
+       "channel",
+       "status"
+      ]
+     }
+    }
+   }
+  }
+ },
+ "$defs": {
+  "allColumnIds": {
+   "_defs": {},
+   "_nullable": false,
+   "description": "date: Date the money moved (YYYY-MM-DD)\nmonth: Year and month, e.g. 2026-10; group by this for monthly totals\nfund: Which community fund\ntype: Kind of movement: Donation, Grant (paid to a person through PayPal Payouts), PayPal fees, Refund, Returned grant, Adjustment\ndirection: In (money received) or Out (money paid or fees)\namount: Amount in US dollars, always positive\nnet: Signed effect on the fund balance in dollars: positive in, negative out\ncategory: Need category for grants (e.g. rent, utilities); for donations, whether it funded a specific need\nparty: Donor name, or the applicant's case for grants\nmethod: How money moved: PayPal checkout for donations; PayPal account, PayPal email or Venmo for grants\nchannel: Web (donor on the site), AI agent (donated through Tideover's MCP server) or Staff\ncaseRef: Request reference such as TDO-7KQ4M\npaypalId: PayPal capture or payout transaction ID\nstatus: PayPal status of the donation or payout\nmemo",
+   "_enum": [
+    "date",
+    "month",
+    "fund",
+    "type",
+    "direction",
+    "amount",
+    "net",
+    "category",
+    "party",
+    "method",
+    "channel",
+    "caseRef",
+    "paypalId",
+    "status",
+    "memo"
+   ],
+   "type": "string"
+  }
+ }
+}

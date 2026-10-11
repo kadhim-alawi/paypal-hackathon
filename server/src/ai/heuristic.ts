@@ -1,10 +1,13 @@
 import type { Assessment, DocumentExtraction, FundRubric, RubricCategory } from "../domain/types.js";
 import { formatMoney, toCents } from "../lib/money.js";
+import { heuristicGridQuery } from "./grid-heuristic.js";
 import { normalizeRubric } from "./shared.js";
 import type {
   AiProvider,
   AssessmentContext,
   CopilotContext,
+  GridQueryContext,
+  GridQueryResult,
   DecisionMessageContext,
   DocumentContext,
   IntakeContext,
@@ -310,6 +313,10 @@ export class HeuristicAi implements AiProvider {
           ? `Lo sentimos, no pudimos aprobar esta solicitud. ${ctx.reason ?? ""} Puede responder con más información o llamar al 211 para otra ayuda local.`
           : `We're sorry, we couldn't approve this request. ${ctx.reason ?? ""} You can reply with more information, or call 211 for other local help.`;
     }
+  }
+
+  async gridQuery(ctx: GridQueryContext): Promise<GridQueryResult> {
+    return heuristicGridQuery(ctx);
   }
 
   async copilotTurn(ctx: CopilotContext): Promise<string> {

@@ -1,0 +1,14 @@
+{
+  "name": "tideover-aggrid-bundle",
+  "private": true,
+  "description": "Builds the AG Grid bundle the staff console's Ledger loads on demand (only the modules it uses).",
+  "license": "MIT",
+  "scripts": {
+    "build": "esbuild entry.mjs --bundle --minify --format=iife --legal-comments=eof --outfile=${OUT:-../../app/web/ledger/aggrid.js}"
+  },
+  "devDependencies": {
+    "ag-grid-community": "36.2.0",
+    "ag-grid-enterprise": "36.2.0",
+    "esbuild": "0.25.10"
+  }
+}
