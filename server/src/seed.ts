@@ -231,7 +231,8 @@ export async function seedDemo(s: Services): Promise<void> {
     refType: "opening_balance",
     refId: eastsideId,
     memo: "Opening balance in the fund's PayPal account",
-    at: new Date(now - 30 * DAY),
+    // 45 days is always a different calendar month, so the Ledger spans months on any date.
+    at: new Date(now - 45 * DAY),
   });
 
   // ------------------------------------------------------------ donations
