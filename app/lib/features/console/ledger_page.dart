@@ -27,7 +27,7 @@ class _LedgerPageState extends State<LedgerPage> {
   final _search = TextEditingController();
 
   static const _suggestions = [
-    'Total grants by category this month',
+    'Total grants by category',
     'Donations that came through AI agents',
     'Grants over \$200, largest first',
     'Money in and out by month',
@@ -206,7 +206,7 @@ class _AskBar extends StatelessWidget {
               onSubmitted: onAsk,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.auto_awesome_outlined, color: T.teal),
-                hintText: 'Ask the ledger, e.g. "total grants by category this month"',
+                hintText: 'Ask the ledger, e.g. "total grants by category"',
               ),
             ),
           ),

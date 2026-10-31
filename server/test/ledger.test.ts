@@ -68,6 +68,12 @@ describe("treasurer Ledger", () => {
     ]);
     expect(byCategory.propertiesToIgnore).toEqual(expect.arrayContaining(["pivot", "columnVisibility"]));
 
+    // The console's suggestion chip has no date range, so it never goes stale.
+    const allTime = await ask("Total grants by category");
+    expect(allTime.gridState.rowGroup).toEqual({ groupColIds: ["category"] });
+    expect(allTime.gridState.filter.filterModel.type).toEqual({ filterType: "set", values: ["Grant"] });
+    expect(allTime.gridState.filter.filterModel.date ?? null).toBeNull();
+
     const agents = await ask("Donations that came through AI agents");
     expect(agents.gridState.filter.filterModel).toMatchObject({
       type: { filterType: "set", values: ["Donation"] },
