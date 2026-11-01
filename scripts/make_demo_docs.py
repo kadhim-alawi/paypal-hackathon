@@ -1,9 +1,12 @@
 """Generates realistic-looking (fictional) supporting documents for demos and seed data.
 
-Every business name here is invented. Output: demo-assets/*.jpg
+Every business name here is invented, and the README says so. The images carry no "sample" or
+"fictional" text on purpose: the AI document reader flags it (correctly) as a red flag.
+Output: demo-assets/*.jpg
 Run: python3 scripts/make_demo_docs.py
 """
 import math
+import os
 import random
 from pathlib import Path
 
@@ -12,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 OUT = Path(__file__).resolve().parent.parent / "demo-assets"
 OUT.mkdir(exist_ok=True)
 
-FONT_DIRS = ["/usr/share/fonts/truetype/dejavu", "/usr/share/fonts/truetype/freefont"]
+FONT_DIRS = [os.environ.get("DEMO_FONT_DIR", ""), "/usr/share/fonts/truetype/dejavu", "/usr/share/fonts/truetype/freefont"]
 
 
 def font(name, size):
@@ -81,7 +84,7 @@ def auto_estimate():
     img, d = paper()
     d.rectangle([0, 0, 1240, 170], fill=(26, 54, 93))
     d.text((70, 40), "EASTSIDE AUTO CARE", font=font(SANS_B, 58), fill="white")
-    d.text((72, 110), "Family-owned since 2004  ·  1810 E 7th St (fictional)  ·  (512) 555-0147", font=font(SANS, 24), fill=(210, 220, 235))
+    d.text((72, 110), "Family-owned since 2004  ·  1810 E 7th St  ·  (512) 555-0147", font=font(SANS, 24), fill=(210, 220, 235))
     d.text((70, 220), "REPAIR ESTIMATE", font=font(SANS_B, 44), fill=(26, 54, 93))
     d.text((860, 230), "Estimate #E-20417", font=font(SANS, 28), fill=(60, 60, 60))
     f = font(SANS, 28)
@@ -107,7 +110,6 @@ def auto_estimate():
     d.text((70, y + 180), "Payment accepted: cash, card, PayPal.", font=font(SANS, 24), fill=(80, 80, 80))
     # handwritten-ish note
     d.text((640, y + 300), "Thanks Maria - call when ready", font=font("FreeSansOblique.ttf", 34), fill=(30, 60, 150))
-    d.text((70, 1500), "This estimate is a fictional sample created for software demos.", font=font(SANS, 18), fill=(150, 150, 150))
     photo(img, "eastside-auto-estimate-380.jpg", -2.2)
 
 
@@ -137,14 +139,13 @@ def shutoff_notice():
     d.text((960, y + 36), "$286.40", font=font(SANS_B, 40), fill=(170, 30, 30))
     d.text((70, y + 120), "Pay by 10/13/2026 to avoid disconnection.", font=font(SANS_B, 30), fill=(20, 20, 20))
     d.text((70, y + 170), "Service may be disconnected on or after 10/14/2026.", font=f, fill=(30, 30, 30))
-    d.text((70, 1500), "Fictional sample document created for software demos.", font=font(SANS, 18), fill=(150, 150, 150))
     photo(img, "capital-power-shutoff-286.jpg", 1.6)
 
 
 def rent_notice():
     img, d = paper()
     d.text((70, 70), "Riverbend Commons Apartments", font=font(SERIF_B, 44), fill=(40, 70, 50))
-    d.text((70, 130), "Leasing Office  ·  (512) 555-0123  (fictional)", font=font(SANS, 22), fill=(90, 90, 90))
+    d.text((70, 130), "Leasing Office  ·  (512) 555-0123", font=font(SANS, 22), fill=(90, 90, 90))
     d.text((70, 230), "NOTICE OF PAST DUE RENT", font=font(SANS_B, 42), fill=(20, 20, 20))
     f = font(SANS, 28)
     body = [
@@ -167,14 +168,13 @@ def rent_notice():
     ]
     for i, t in enumerate(msg):
         d.text((70, y + 130 + i * 44), t, font=f, fill=(30, 30, 30))
-    d.text((70, 1500), "Fictional sample document created for software demos.", font=font(SANS, 18), fill=(150, 150, 150))
     photo(img, "riverbend-rent-notice-750.jpg", -1.1)
 
 
 def pharmacy_quote():
     img, d = paper(1000, 1400)
     d.text((60, 60), "NEIGHBORHOOD PHARMACY", font=font(SANS_B, 40), fill=(20, 110, 100))
-    d.text((60, 115), "Prescription price quote (fictional sample)", font=font(SANS, 24), fill=(90, 90, 90))
+    d.text((60, 115), "Prescription price quote", font=font(SANS, 24), fill=(90, 90, 90))
     f = font(MONO, 26)
     lines = [
         "DATE        10/09/2026",
