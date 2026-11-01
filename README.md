@@ -8,7 +8,7 @@ Tideover is the operating system for community emergency funds: mutual aid group
 
 > **AI proposes, people decide, rules enforce.** Claude reads the story and the documents and writes the case file. A human approves. Deterministic code enforces the fund's caps, balance, duplicate checks and two-person rule, and the AI cannot override any of them.
 
-**Live demo:** _add your Render URL here_ · **Video:** _add your YouTube link here_ · **License:** MIT
+**Live demo:** [https://tideover.onrender.com](https://tideover.onrender.com) · **Video:** _add your YouTube link here_ · **License:** MIT
 
 ![Tideover home page](docs/screenshots/home.jpg)
 
@@ -95,9 +95,9 @@ Prompt caching keeps the long policy prompts cheap, server-side fallbacks keep r
 
 | | |
 |---|---|
-| Hosted demo | _add your Render URL here_ |
+| Hosted demo | https://tideover.onrender.com |
 | Staff console | `/console` → **Sign in as Sam (reviewer)** or **Avery (admin)**, one click (`reviewer@tideover.app` / `tideover-review`, `admin@tideover.app` / `tideover-admin`) |
-| PayPal sandbox buyer (donations, Log in with PayPal) | _sandbox personal account email_ / _password_ (test credentials, fake money) |
+| PayPal sandbox buyer (donations, Log in with PayPal) | `sb-rix1g53636272@personal.example.com` / `FG8>j"Ma` (test credentials, fake money) |
 | Sample documents to upload | [`demo-assets/`](demo-assets/) |
 | AI agent giving | `cd server && ANTHROPIC_API_KEY=... npm run agent -- --url <demo URL> "Give $25 to an approved need"` |
 

@@ -6,7 +6,7 @@ Copy these into the Devpost form. Fill in the bracketed links before submitting.
 
 **Tagline (≤ 200 chars):** An AI caseworker and PayPal rails that get emergency cash to neighbors in minutes, not months: Claude does the casework, people decide, and PayPal Payouts delivers.
 
-**Links:** live demo [Render URL] · video [YouTube URL] · code [GitHub URL]
+**Links:** live demo https://tideover.onrender.com · video [YouTube URL] · code [GitHub URL]
 
 **Prizes:** the official rules let a project win **one Grand Prize or one Honorable Mention (Most Creative, Most Impactful, Best Demo Delivery, Best Use of PayPal + AI, Best Use of Agentic Commerce), plus one Sponsor Prize**. Enter for every grand and honorable-mention prize, and for two sponsor prizes: **Best Use of AG Grid** (the treasurer Ledger is built on AG Grid Enterprise and its AI Toolkit) and **Best Use of Render** (deployed from a Render Blueprint as a Docker web service with Render Postgres). Only one sponsor prize can be won. Tideover doesn't use APIMatic, Bryntum or Channel3.
 
@@ -89,13 +89,13 @@ The rules ask every submission to name its AI tools and explain how they're used
 
 ## Testing instructions for judges
 
-- **Hosted demo:** [Render URL]. Every page shows a banner with the mode (PayPal sandbox or simulator, Claude or offline).
+- **Hosted demo:** https://tideover.onrender.com. Every page shows a banner with the mode (PayPal sandbox or simulator, Claude or offline).
 - **Staff console:** open `/console` and use **Sign in as Sam (reviewer)** or **Sign in as Avery (admin)** (one click; or `reviewer@tideover.app` / `tideover-review`, `admin@tideover.app` / `tideover-admin`).
-- **PayPal sandbox buyer for donations and Log in with PayPal:** [sandbox personal account email] / [password]. These are sandbox test credentials holding fake money.
+- **PayPal sandbox buyer for donations and Log in with PayPal:** `sb-rix1g53636272@personal.example.com` / `FG8>j"Ma`. These are sandbox test credentials holding fake money.
 - **Sample documents** to upload when applying: [`demo-assets/`](../demo-assets) in the repo.
 - **A 5-minute guided tour** is in the README ("Judge's tour"). To run it locally instead, see "Run it locally" (three commands, no keys needed: it runs fully offline in simulator mode).
 - **Ledger:** in the console, open **Ledger** and tap *Total grants by category*, or drag a column header up to group by it.
-- **Agentic giving:** `cd server && ANTHROPIC_API_KEY=... npm run agent -- --url [Render URL] "Give $25 to an approved need"`, or add `[Render URL]/mcp` to any MCP-capable assistant.
+- **Agentic giving:** `cd server && ANTHROPIC_API_KEY=... npm run agent -- --url https://tideover.onrender.com "Give $25 to an approved need"`, or add `https://tideover.onrender.com/mcp` to any MCP-capable assistant.
 
 ## How Tideover meets the judging criteria
 
