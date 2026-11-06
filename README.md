@@ -97,7 +97,7 @@ Prompt caching keeps the long policy prompts cheap, server-side fallbacks keep r
 |---|---|
 | Hosted demo | https://tideover.onrender.com |
 | Staff console | `/console` → **Sign in as Sam (reviewer)** or **Avery (admin)**, one click (`reviewer@tideover.app` / `tideover-review`, `admin@tideover.app` / `tideover-admin`) |
-| PayPal sandbox buyer (donations, Log in with PayPal) | `sb-rix1g53636272@personal.example.com` / `FG8>j"Ma` (test credentials, fake money) |
+| PayPal sandbox buyer (donations, Log in with PayPal) | `judge.tideover@personal.example.com` / `ZjN#1H+w` (test credentials, fake money) |
 | Sample documents to upload | [`demo-assets/`](demo-assets/) |
 | AI agent giving | `cd server && ANTHROPIC_API_KEY=... npm run agent -- --url <demo URL> "Give $25 to an approved need"` |
 

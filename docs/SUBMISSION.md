@@ -91,7 +91,7 @@ The rules ask every submission to name its AI tools and explain how they're used
 
 - **Hosted demo:** https://tideover.onrender.com. Every page shows a banner with the mode (PayPal sandbox or simulator, Claude or offline).
 - **Staff console:** open `/console` and use **Sign in as Sam (reviewer)** or **Sign in as Avery (admin)** (one click; or `reviewer@tideover.app` / `tideover-review`, `admin@tideover.app` / `tideover-admin`).
-- **PayPal sandbox buyer for donations and Log in with PayPal:** `sb-rix1g53636272@personal.example.com` / `FG8>j"Ma`. These are sandbox test credentials holding fake money.
+- **PayPal sandbox buyer for donations and Log in with PayPal:** `judge.tideover@personal.example.com` / `ZjN#1H+w`. These are sandbox test credentials holding fake money.
 - **Sample documents** to upload when applying: [`demo-assets/`](../demo-assets) in the repo.
 - **A 5-minute guided tour** is in the README ("Judge's tour"). To run it locally instead, see "Run it locally" (three commands, no keys needed: it runs fully offline in simulator mode).
 - **Ledger:** in the console, open **Ledger** and tap *Total grants by category*, or drag a column header up to group by it.
