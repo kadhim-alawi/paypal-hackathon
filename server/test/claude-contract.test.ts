@@ -69,6 +69,28 @@ function fakeFetch(responders: Array<(req: Req) => Response>) {
 const fund = { name: "Eastside Neighbors Emergency Fund", region: "East Austin, TX", currency: "USD", policyText: EASTSIDE_POLICY, rubric: EASTSIDE_RUBRIC };
 
 describe("ClaudeAi against the Messages API wire format", () => {
+  it("never sends a conversation that ends on an assistant turn (opus-5-5 rejects prefill)", async () => {
+    const { impl, requests } = fakeFetch([() => streamOf([{ type: "text", text: "Thanks, I see the notice." }], "end_turn")]);
+    const ai = new ClaudeAi({ apiKey: "sk-test", baseUrl: "https://api.anthropic.test", fetch: impl }, "claude-opus-5-5");
+    await ai.intakeTurn({
+      fund,
+      publicRef: "TDO-TEST2",
+      facts: {},
+      documents: [],
+      // A document note landed while the previous turn was replying, so this queued turn follows the assistant's answer.
+      history: [
+        { role: "assistant", content: "Hi, I'm the assistant." },
+        { role: "user", content: "My power bill is $286." },
+        { role: "event", content: "The applicant uploaded a shut-off notice." },
+        { role: "assistant", content: "What's your student ID?" },
+      ],
+      onDelta: () => {},
+      tools: { recordDetails: async () => "Saved.", requestDocument: async () => "ok", markReady: async () => "ok" },
+    });
+    const messages = requests[0]!.body.messages as Array<{ role: string }>;
+    expect(messages[messages.length - 1]!.role).toBe("user");
+  });
+
   it("runs a streaming intake turn with tool use and streams text to the applicant", async () => {
     const { impl, requests } = fakeFetch([
       () =>

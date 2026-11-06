@@ -195,6 +195,12 @@ function toMessages(history: ChatTurn[]): BetaMessageParam[] {
     out.push({ role, content: text });
   }
   if (out.length === 0) out.push({ role: "user", content: "[Tideover system note] The applicant opened the help form." });
+  // opus-5-5 rejects a conversation that ends on an assistant turn (no prefill). That happens when a
+  // document note lands while the previous turn is still replying: the queued turn then starts
+  // right after the assistant's own answer.
+  if (out[out.length - 1]!.role === "assistant") {
+    out.push({ role: "user", content: "[Tideover system note] Continue: acknowledge anything new above, then ask the next question the fund's policy needs." });
+  }
   return out;
 }
 
