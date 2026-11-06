@@ -4,7 +4,7 @@ The rules ask for a video **under 3 minutes**, **public on YouTube**, showing th
 
 ## Before recording
 
-- Run the deployed app in **sandbox + Claude** mode (the banner should read *PayPal sandbox · Claude*), not the simulator, so the PayPal pages are real.
+- Run the deployed app in **sandbox + Claude** mode (the banner should read *PayPal sandbox · test money only*, with no "simulator" or "AI offline" notice; `/api/config` should say `sandbox` and `claude`), not the simulator, so the PayPal pages are real.
 - Prepare two sandbox personal accounts: **Maria** (applicant, connects with Log in with PayPal) and **Alex** (donor). Keep a logged-in tab on [sandbox.paypal.com](https://www.sandbox.paypal.com) as Maria to show the money arriving.
 - Phone shots: Chrome DevTools device mode (iPhone 14 size) or the Flutter app on a device. Console shots: a 1440×900 browser window.
 - Have `demo-assets/eastside-auto-estimate-380.jpg` on the phone or desktop.
@@ -29,7 +29,7 @@ The rules ask for a video **under 3 minutes**, **public on YouTube**, showing th
 
 ## Shot list checklist
 
-- [ ] Banner shows sandbox + Claude (not simulator)
+- [ ] Banner reads "PayPal sandbox · test money only" (no simulator or "AI offline" notice)
 - [ ] Spanish conversation with a document read on screen
 - [ ] Real PayPal sandbox login and checkout pages (PayPal branding visible)
 - [ ] Money visibly arriving in a sandbox account
