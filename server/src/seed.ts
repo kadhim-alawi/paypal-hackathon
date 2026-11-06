@@ -503,6 +503,15 @@ export async function seedDemo(s: Services): Promise<void> {
   });
 
   // ------------------------------------- Riverside: an approved need waiting on donors
+  // The simulator knows the made-up payer id below. Real PayPal would fail the payout with
+  // RECEIVER_ACCOUNT_INVALID, so there it goes to a real sandbox account by email
+  // (DEMO_RECEIVER_EMAIL), or sits "unclaimed" if none is set.
+  const needPayout = simulated
+    ? { payoutMethod: "paypal_account" as const, payoutReceiver: "SIMDEVPAT8K3N", paypalPayerId: "SIMDEVPAT8K3N", paypalEmail: "dev.patel@personal.example.com", payoutVerified: true }
+    : (() => {
+        const email = s.config.demoReceiverEmail ?? "dev.patel@personal.example.com";
+        return { payoutMethod: "paypal_email" as const, payoutReceiver: email, paypalPayerId: null, paypalEmail: email, payoutVerified: false };
+      })();
   const needId = newId("app");
   await s.db.insert(applications).values({
     id: needId,
@@ -517,12 +526,8 @@ export async function seedDemo(s: Services): Promise<void> {
     amountApprovedCents: 42_000,
     needSummary: "Nursing student's rent gap after clinical rotations cut work hours; landlord notice due at month end.",
     facts: { firstName: "Tran", location: "Riverside", urgency: "this_month" },
-    payoutMethod: "paypal_account",
-    payoutReceiver: "SIMDEVPAT8K3N",
-    paypalPayerId: "SIMDEVPAT8K3N",
-    paypalEmail: "dev.patel@personal.example.com",
+    ...needPayout,
     paypalName: "Dev Patel",
-    payoutVerified: true,
     consentPublicStory: true,
     publicStory: "A nursing student needs help covering rent while unpaid clinical rotations cut her work hours.",
     aiRecommendation: "approve",

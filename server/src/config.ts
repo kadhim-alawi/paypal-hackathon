@@ -36,6 +36,8 @@ const EnvSchema = z.object({
   CLAUDE_MODEL: z.string().default("claude-opus-5-5"),
   /** AG Grid Enterprise licence for the staff Ledger; without it the grid runs in evaluation mode (watermark). */
   AG_GRID_LICENSE_KEY: z.string().optional(),
+  /** Sandbox account that receives the seeded "approved need" grant when running against real PayPal. */
+  DEMO_RECEIVER_EMAIL: z.string().email().optional().or(z.literal("")),
 
   SEED_DEMO: z
     .enum(["true", "false"])
@@ -77,6 +79,7 @@ export interface AppConfig {
     model: string;
   };
   agGridLicenseKey?: string;
+  demoReceiverEmail?: string;
   seedDemo: boolean;
   admin: { email: string; password: string };
   reviewer: { email: string; password: string };
@@ -131,6 +134,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       model: parsed.CLAUDE_MODEL,
     },
     agGridLicenseKey: parsed.AG_GRID_LICENSE_KEY || undefined,
+    demoReceiverEmail: parsed.DEMO_RECEIVER_EMAIL || undefined,
     seedDemo: parsed.SEED_DEMO,
     admin: { email: parsed.ADMIN_EMAIL, password: parsed.ADMIN_PASSWORD },
     reviewer: { email: parsed.REVIEWER_EMAIL, password: parsed.REVIEWER_PASSWORD },
