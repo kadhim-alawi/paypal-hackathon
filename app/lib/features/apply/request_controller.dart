@@ -108,6 +108,10 @@ class RequestController extends ChangeNotifier {
     notifyListeners();
     try {
       await api.post('/api/applications/$id/messages', body: {'content': content}, headers: _auth);
+      // The server has stored it. Load that copy, then drop the local echo; otherwise it resurfaces
+      // at the bottom once it is older than the 2 minute window in [messages].
+      await refresh();
+      _pending.remove(temp);
     } catch (e) {
       _pending.remove(temp);
       rethrow;
