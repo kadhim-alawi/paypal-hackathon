@@ -6,7 +6,7 @@ Copy these into the Devpost form. Fill in the bracketed links before submitting.
 
 **Tagline (≤ 200 chars):** An AI caseworker and PayPal rails that get emergency cash to neighbors in minutes, not months: Claude does the casework, people decide, and PayPal Payouts delivers.
 
-**Links:** live demo https://tideover.onrender.com · video [YouTube URL] · code [GitHub URL]
+**Links:** live demo https://tideover.onrender.com · video https://youtu.be/vA2bi7rplvA · code https://github.com/kadhim-alawi/paypal-hackathon
 
 **Prizes:** the official rules let a project win **one Grand Prize or one Honorable Mention (Most Creative, Most Impactful, Best Demo Delivery, Best Use of PayPal + AI, Best Use of Agentic Commerce), plus one Sponsor Prize**. Enter for every grand and honorable-mention prize, and for two sponsor prizes: **Best Use of AG Grid** (the treasurer Ledger is built on AG Grid Enterprise and its AI Toolkit) and **Best Use of Render** (deployed from a Render Blueprint as a Docker web service with Render Postgres). Only one sponsor prize can be won. Tideover doesn't use APIMatic, Bryntum or Channel3.
 

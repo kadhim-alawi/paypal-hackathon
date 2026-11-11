@@ -8,7 +8,7 @@ Tideover is the operating system for community emergency funds: mutual aid group
 
 > **AI proposes, people decide, rules enforce.** Claude reads the story and the documents and writes the case file. A human approves. Deterministic code enforces the fund's caps, balance, duplicate checks and two-person rule, and the AI cannot override any of them.
 
-**Live demo:** [https://tideover.onrender.com](https://tideover.onrender.com) · **Video:** _add your YouTube link here_ · **License:** MIT
+**Live demo:** [https://tideover.onrender.com](https://tideover.onrender.com) · **Video:** [https://youtu.be/vA2bi7rplvA](https://youtu.be/vA2bi7rplvA) · **License:** MIT
 
 ![Tideover home page](docs/screenshots/home.jpg)
 
