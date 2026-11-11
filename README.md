@@ -191,7 +191,7 @@ More detail in **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 app/          Flutter app (web + iOS/Android): applicant, donor and staff experiences
 server/       Fastify API, domain logic, PayPal gateway + simulator, AI layer, MCP server, tests
 demo-assets/  Fictional sample documents for trying the document reader
-docs/         Architecture, PayPal setup, demo script, submission text, screenshots
+docs/         Architecture, PayPal setup, screenshots
 e2e/          Playwright journeys
 tools/aggrid/ Builds the AG Grid bundle the Ledger loads on demand (AG Grid Enterprise isn't committed)
 ```
